@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "sourceMap": true,
+        "skipLibCheck": true,
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "files" : ["map_polygon.ts",]
+}

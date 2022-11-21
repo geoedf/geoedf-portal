@@ -1,0 +1,19 @@
+{% extends 'globus-portal-framework/v2/search-about.html' %}
+{% comment %}
+The original template for Globus Portal Framework is here:
+https://github.com/globus/django-globus-portal-framework/blob/main/globus_portal_framework/templates/globus-portal-framework/v2/search-about.html
+{% endcomment %}
+
+{% block landing_page_about %}
+This is an example portal to demonstrate the minimum required settings to search
+and display metadata from Globus Search.
+{% endblock %}
+
+{% block landing_page_data_access %}
+<p class="lead font-weight-bolder">
+  Anyone can create a search index and populate it with data.
+  We suggest you run our tutorial named the Gladier Flows Tutorial on our Jupyter Demos site.</p>
+  <a class="btn btn-primary" target="_blank" href="https://jupyter.demo.globus.org">
+    Checkout Ingest Tutorial
+  </a>
+{% endblock %}
