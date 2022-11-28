@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import render
 from globus_portal_framework.gsearch import post_search, get_search_query, get_search_filters, get_template, get_subject
 
@@ -16,6 +17,10 @@ def mysearch(request, index):
 
 def file_detail(request, index, filename):
     print("[file_detail]")
-    context = {'detail': get_subject(index, filename, request.user)}
+    detail = get_subject(index, filename, request.user)
+    context = {'detail': detail,
+               'schemaorg_json': detail
+               }
     print(f'[mysearch]{json.dumps(context, indent=4, sort_keys=True, default=str)}')
     return render(request, get_template(index, 'schema-org-index/detail-overview.html'), context)
+

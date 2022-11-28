@@ -1,5 +1,15 @@
 {% extends 'globus-portal-framework/v2/detail-overview.html' %}
 {% load static %}
+
+{% block headextras %}
+    <head>
+    <script id="schemaorg" type="application/ld+json">
+{{ schemaorg_json|safe }}
+</script>
+    {{ block.super }}
+{% endblock %}
+
+</head>
 {% block detail_body %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAnCzJyJ-WflfFk7BCUg1zen-hBYp9V0fo"
             async
