@@ -67,7 +67,7 @@
                             <div class="card my-3">
                                 <div class="card-header">
                                     <h3 class="search-title">
-                                        <a href="{% url 'resource' globus_portal_framework.index result.subject %}">{{ result.name|default:'Result' }}</a>
+                                        <a href="{% url 'resource' globus_portal_framework.index result.id %}">{{ result.name|default:'Result' }}</a>
                                     </h3>
                                 </div>
                                 <div class="card-body">

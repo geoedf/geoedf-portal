@@ -40,11 +40,11 @@ SOCIAL_AUTH_GLOBUS_SCOPE = [
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 SEARCH_INDEXES = {
     'schema-org-index': {
-        'uuid': '76c5e7eb-6cb6-492c-ba80-7e47abff0586',
+        'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
         'name': 'Schema.org Json Index',
         'fields': [
             ('extension', fields.extension),
@@ -52,7 +52,7 @@ SEARCH_INDEXES = {
             ('name', fields.name),
             ('creator', fields.creator_name),
             ('creative_work_status', fields.creative_work_status),
-            ('schemaorg', fields.schemaorg),
+            ('id', fields.identifier),
         ],
         'facets': [  # limit of 3 facets
             {
@@ -96,6 +96,8 @@ SEARCH_INDEXES = {
         ],
     }
 }
+
+SITE_ID = 1
 
 # Application definition
 INSTALLED_APPS = [
