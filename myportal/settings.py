@@ -97,7 +97,7 @@ SEARCH_INDEXES = {
     }
 }
 
-SITE_ID = 1
+SITE_ID = 1  # todo set the domain
 
 # Application definition
 INSTALLED_APPS = [
