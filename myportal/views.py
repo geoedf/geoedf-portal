@@ -1,21 +1,10 @@
 import os
+from sqlite3 import OperationalError
+
 from django.contrib.sites.models import Site
 from django.shortcuts import render
 from globus_portal_framework.gsearch import post_search, get_search_query, get_search_filters, get_template, \
     get_subject, get_index
-
-
-def update_site_domain():
-    # Site = apps.get_model("sites", "Site")
-    site = Site.objects.get(id=1)
-    host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
-
-    site.domain = host
-    site.name = host
-    site.save()
-
-
-update_site_domain()
 
 
 def mysearch(request, index):
@@ -65,3 +54,19 @@ def file_detail(request, index, uuid):
                'schemaorg_json': subject
                }
     return render(request, get_template(index, 'schema-org-index/detail-overview.html'), context)
+
+
+def update_site_domain():
+    # Site = apps.get_model("sites", "Site")
+    try:
+        site = Site.objects.get(id=1)
+        host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
+
+        site.domain = host
+        site.name = host
+        site.save()
+    except:
+        pass
+
+
+update_site_domain()
