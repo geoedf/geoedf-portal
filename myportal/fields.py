@@ -65,6 +65,10 @@ def files(result):
     return result[0]['files']
 
 
+def identifier(result):
+    return result[0]['identifier']
+
+
 def extension(result):
     # print(result)
     return result[0]['extension']

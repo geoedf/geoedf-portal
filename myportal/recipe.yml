@@ -1,0 +1,16 @@
+version: 1
+schemas:
+  Dataset:
+    recommended:
+      - sameAs
+      - url
+      - additionalType
+      - name
+      - creativeWorkStatus
+      - PropertyValue: identifier
+      - citation
+      - keywords
+      - license
+      - spatialCoverage
+      - temporalCoverage
+    required:
