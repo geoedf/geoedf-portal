@@ -50,8 +50,8 @@ SEARCH_INDEXES = {
             ('extension', fields.extension),
             ('size_bytes', fields.size_bytes),
             ('name', fields.name),
-            ('creator', fields.creator_name),
-            ('creative_work_status', fields.creative_work_status),
+            # ('creator', fields.creator_name),
+            # ('creative_work_status', fields.creative_work_status),
             ('id', fields.identifier),
         ],
         'facets': [  # limit of 3 facets
