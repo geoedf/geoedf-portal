@@ -97,7 +97,8 @@ SEARCH_INDEXES = {
     }
 }
 
-SITE_ID = 1  # todo set the domain
+SITE_ID = 1
+# SITE_NAME = 'geoedf.sample.com'
 
 # Application definition
 INSTALLED_APPS = [
