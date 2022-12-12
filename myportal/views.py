@@ -1,5 +1,6 @@
 import os
-from sqlite3 import OperationalError
+
+from django.conf import settings
 
 from django.contrib.sites.models import Site
 from django.shortcuts import render
@@ -29,7 +30,7 @@ def file_detail(request, index, uuid):
     print(f"[file_detail] schemaorg_json={schemaorg_json}")
 
     detail = {'id': schemaorg_json['@id'],
-              'subject': subject['subject'],
+              # 'subject': subject['subject'],
               'size_bytes': subject['size_bytes'],
               'date_published': schemaorg_json['datePublished'],
               'date_modified': schemaorg_json['dateModified'],
@@ -60,8 +61,10 @@ def update_site_domain():
     # Site = apps.get_model("sites", "Site")
     try:
         site = Site.objects.get(id=1)
-        host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
-
+        # host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
+        # host = getattr(settings, "SITE_NAME", None)
+        host = os.environ.get('SITE_NAME')
+        print(f"[update_site_domain] host={host}")
         site.domain = host
         site.name = host
         site.save()

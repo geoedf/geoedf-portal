@@ -3,6 +3,8 @@ USER root
 SHELL ["/bin/bash", "-c"]
 RUN mkdir /code
 WORKDIR /code
+ARG SITE_NAME
+ENV SITE_NAME=${SITE_NAME}
 
 RUN apt-get update && apt-get install python3 -y && apt-get install python3-pip -y &&\
     pip3 install -U --pre django-globus-portal-framework
