@@ -63,7 +63,7 @@ def update_site_domain():
         site = Site.objects.get(id=1)
         # host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
         # host = getattr(settings, "SITE_NAME", None)
-        host = os.environ.get('SITE_NAME')
+        host = os.environ.get('SITE_NAME', 'localhost')
         print(f"[update_site_domain] host={host}")
         site.domain = host
         site.name = host
