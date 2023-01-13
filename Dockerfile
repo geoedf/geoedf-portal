@@ -14,10 +14,6 @@ COPY . /code/
 # todo environmental variable for globus key and secret
 #ENTRYPOINT  python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000
 
-#ENV DJANGO_SUPERUSER_USERNAME=admin
-#ENV DJANGO_SUPERUSER_EMAIL=superuser@gmail.com
-#ENV DJANGO_SUPERUSER_PASSWORD=superuser@gmail.com
-
 RUN chmod +x entrypoint.sh
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
