@@ -1,11 +1,42 @@
 import os
 
-from django.conf import settings
-
 from django.contrib.sites.models import Site
-from django.shortcuts import render
 from globus_portal_framework.gsearch import post_search, get_search_query, get_search_filters, get_template, \
     get_subject, get_index
+from django.shortcuts import render
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, permissions, serializers
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+
+class GetResourceSchemaorgRequest(serializers.Serializer):
+    # id = serializers.IntegerField()
+    pass
+
+
+class GetResourceSchemaorg(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(request_body=GetResourceSchemaorgRequest)
+    def post(self, request, index, uuid):
+        serializer = GetResourceSchemaorgRequest(data=request.data)
+        if serializer.is_valid():
+            subject = get_subject(index, uuid, request.user)
+            print(f"[GetResourceSchemaorg] subject={subject}")
+            try:
+                endpoint = subject['all'][0]
+            except KeyError:
+                return Response(
+                    data={"status": "UUID does not exist"},
+                    status=status.HTTP_200_OK,
+                )
+            schemaorg_json = endpoint['schemaorgJson']
+            return Response(
+                data={"status": "OK", "schemaorg": schemaorg_json},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def mysearch(request, index):
@@ -61,13 +92,13 @@ def update_site_domain():
     # Site = apps.get_model("sites", "Site")
     try:
         site = Site.objects.get(id=1)
-        # host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
         # host = getattr(settings, "SITE_NAME", None)
         host = os.environ.get('SITE_NAME', 'localhost')
         print(f"[update_site_domain] host={host}")
         site.domain = host
         site.name = host
         site.save()
+
     except:
         pass
 

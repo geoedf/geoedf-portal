@@ -28,6 +28,9 @@ SECRET_KEY = 'django-insecure-47f(ub2qs-n!b@&&)tis&l$&qf1%^@&jy-95jx!bahqrm^19m2
 SOCIAL_AUTH_GLOBUS_KEY = ''
 SOCIAL_AUTH_GLOBUS_SECRET = ''
 
+# ALLAUTH
+SOCIALACCOUNT_LOGIN_ON_GET=True
+
 # This is a general Django setting if views need to redirect to login
 # https://docs.djangoproject.com/en/3.2/ref/settings/#login-url
 LOGIN_URL = '/login/globus'
@@ -46,6 +49,7 @@ SEARCH_INDEXES = {
     'schema-org-index': {
         'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
         'name': 'Schema.org Json Index',
+        'template_override_dir': 'schema-org-index',
         'fields': [
             ('extension', fields.extension),
             ('size_bytes', fields.size_bytes),
@@ -73,12 +77,6 @@ SEARCH_INDEXES = {
                 'size': 10,
                 'type': 'terms'
             },
-            # {
-            #     'name': 'Availability Filter',
-            #     'field_name': 'schemaorgJson.creativeWorkStatus',
-            #     'size': 10,
-            #     'type': 'terms'
-            # },
             # {
             #     'name': 'File Size (Bytes)',
             #     'type': 'numeric_histogram',
@@ -112,6 +110,11 @@ INSTALLED_APPS = [
     'social_django',
     'django.contrib.sitemaps',
     'django.contrib.sites',
+    'drf_yasg',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.cilogon',
 ]
 
 MIDDLEWARE = [
@@ -130,8 +133,10 @@ MIDDLEWARE = [
 # Authentication backends setup OAuth2 handling and where user data should be
 # stored
 AUTHENTICATION_BACKENDS = [
-    'globus_portal_framework.auth.GlobusOpenIdConnect',
-    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+    'allauth.socialaccount.providers.cilogon',
+    # 'globus_portal_framework.auth.GlobusOpenIdConnect',
+    # 'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'myportal.urls'
