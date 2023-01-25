@@ -93,7 +93,7 @@ def update_site_domain():
     try:
         site = Site.objects.get(id=1)
         # host = getattr(settings, "SITE_NAME", None)
-        host = os.environ.get('SITE_NAME', 'localhost')
+        host = os.environ.get('SITE_NAME', 'localhost:8000')
         print(f"[update_site_domain] host={host}")
         site.domain = host
         site.name = host
@@ -104,3 +104,8 @@ def update_site_domain():
 
 
 update_site_domain()
+
+
+def temp_view(request):
+    return render(request, 'schema-org-index/detail-overview.html', {})
+

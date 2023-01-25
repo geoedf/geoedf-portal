@@ -7,7 +7,7 @@ from globus_portal_framework.urls import register_custom_index
 
 from myportal import views
 from myportal.sitemap import GeoFileSitemap
-from myportal.views import mysearch, file_detail
+from myportal.views import mysearch, file_detail, temp_view
 
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -42,5 +42,6 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('accounts/', include('allauth.urls')),
+    path('callback/', temp_view, name='temp-view')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

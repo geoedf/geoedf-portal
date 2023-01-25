@@ -33,7 +33,10 @@ SOCIALACCOUNT_LOGIN_ON_GET=True
 
 # This is a general Django setting if views need to redirect to login
 # https://docs.djangoproject.com/en/3.2/ref/settings/#login-url
-LOGIN_URL = '/login/globus'
+LOGIN_URL = '/login/cilogon'
+# LOGIN_URL = '/login/globus'
+ACCOUNT_LOGOUT_REDIRECT_URL ='/accounts/login/'
+LOGIN_REDIRECT_URL = '/accounts/email/'
 
 # This dictates which scopes will be requested on each user login
 SOCIAL_AUTH_GLOBUS_SCOPE = [
@@ -134,10 +137,12 @@ MIDDLEWARE = [
 # stored
 AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
-    'allauth.socialaccount.providers.cilogon',
-    # 'globus_portal_framework.auth.GlobusOpenIdConnect',
-    # 'django.contrib.auth.backends.ModelBackend',
+    # 'allauth.socialaccount.providers.cilogon',
+    'globus_portal_framework.auth.GlobusOpenIdConnect',
+    'django.contrib.auth.backends.ModelBackend',
 ]
+
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 ROOT_URLCONF = 'myportal.urls'
 
