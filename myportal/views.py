@@ -1,6 +1,9 @@
 import os
 
+from django.conf import settings
 from django.contrib.sites.models import Site
+from globus_portal_framework import gsearch
+from globus_portal_framework.apps import get_setting
 from globus_portal_framework.gsearch import post_search, get_search_query, get_search_filters, get_template, \
     get_subject, get_index
 from django.shortcuts import render
@@ -106,6 +109,17 @@ def update_site_domain():
 update_site_domain()
 
 
+def index_selection(request):
+    print(f"[index_selection] request={request}")
+
+    context = {
+        'search_indexes': get_setting('SEARCH_INDEXES'),
+        'allowed_groups': getattr(settings,
+                                  'SOCIAL_AUTH_GLOBUS_ALLOWED_GROUPS', [])
+    }
+    return render(request, 'index-selection.html',
+                  context)
+
+
 def temp_view(request):
     return render(request, 'schema-org-index/detail-overview.html', {})
-

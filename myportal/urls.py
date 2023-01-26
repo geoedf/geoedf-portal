@@ -7,7 +7,7 @@ from globus_portal_framework.urls import register_custom_index
 
 from myportal import views
 from myportal.sitemap import GeoFileSitemap
-from myportal.views import mysearch, file_detail, temp_view
+from myportal.views import mysearch, file_detail, temp_view, index_selection
 
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -32,6 +32,8 @@ urlpatterns = [
     path('<custom_search:index>/resource/<uuid>', file_detail, name='resource'),
     path('<custom_search:index>/', mysearch, name='search'),
     path('<custom_search:index>/api/resource/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
+
+    path('', index_selection, name='index-selection-p'),
     path('', include('globus_portal_framework.urls')),
     path('', include('social_django.urls', namespace='social')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),

@@ -48,6 +48,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+PROJECT_TITLE = 'GeoEDF'
 SEARCH_INDEXES = {
     'schema-org-index': {
         'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
