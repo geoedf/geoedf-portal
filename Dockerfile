@@ -7,7 +7,9 @@ WORKDIR /code
 # ENV SITE_NAME=${SITE_NAME}
 
 RUN apt-get update && apt-get install python3-pip -y &&\
-    pip3 install -U --pre django-globus-portal-framework
+    pip3 install -U --pre django-globus-portal-framework &&\
+    pip3 install drf-yasg &&\
+    pip3 install django-allauth
 
 COPY . /code/
 

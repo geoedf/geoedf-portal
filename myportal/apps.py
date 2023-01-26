@@ -10,7 +10,7 @@ class MyportalConfig(AppConfig):
     def ready(self):
         print("myportal is ready")
         site = Site.objects.get(id=1)
-        host = os.environ.get("SITE_HOST", default="localhost:8000")  # todo get host name
+        host = os.environ.get("SITE_HOST", default="localhost:8000")
 
         site.domain = host
         site.name = host
