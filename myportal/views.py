@@ -42,6 +42,35 @@ class GetResourceSchemaorg(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class GetResourceSchemaorgListRequest(serializers.Serializer):
+    id_list = serializers.IntegerField()
+
+
+
+class GetResourceSchemaorgList(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(request_body=GetResourceSchemaorgListRequest)
+    def post(self, request, index):
+        serializer = GetResourceSchemaorgRequest(data=request.data)
+        if serializer.is_valid():
+            subject = get_subject(index, request.id_list, request.user)# todo
+            print(f"[ListResourceSchemaorg] subject={subject}")
+            try:
+                endpoint = subject['all'][0]
+            except KeyError:
+                return Response(
+                    data={"status": "UUID does not exist"},
+                    status=status.HTTP_200_OK,
+                )
+            schemaorg_json = endpoint['schemaorgJson']
+            return Response(
+                data={"status": "OK", "schemaorg_list": [schemaorg_json]},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 def mysearch(request, index):
     query = get_search_query(request)
     print(f'[mysearch]{query}')
@@ -106,7 +135,28 @@ def update_site_domain():
         pass
 
 
-update_site_domain()
+def update_social_app():
+    try:
+        site = Site.objects.get(id=1)
+        # host = getattr(settings, "SITE_NAME", None)
+        host = os.environ.get('SOCIAL_APP_cilogon', 'localhost:8000')
+        print(f"[update_site_domain] host={host}")
+        site.domain = host
+        site.name = host
+        site.save()
+
+    except:
+        pass
+
+
+def set_django_configurations():
+    update_site_domain()
+    update_social_app()
+
+
+set_django_configurations()
+
+
 
 
 def index_selection(request):

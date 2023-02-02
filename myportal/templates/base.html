@@ -49,7 +49,7 @@
                 {% elif  not request.user.is_authenticated %}
 {#                    'cilogon' in backends.backends and#}
                     <li>
-              <a class="nav-link" href="{% provider_login_url 'cilogon' next='http://localhost:8000/callback' %}">Login</a>
+              <a class="nav-link" href="{% provider_login_url 'cilogon' next='https://localhost:8000/accounts/cilogon/login/callback/' %}">Login</a>
 {#              <a class="nav-link" href="{% url 'social:begin' 'cilogon' %}?next={{ request.get_full_path|urlencode }}">Login</a>#}
             </li>
                 {% endif %}
