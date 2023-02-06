@@ -1,3 +1,4 @@
+import json
 import os
 
 from django.conf import settings
@@ -115,7 +116,7 @@ def file_detail(request, index, uuid):
 
     context = {'title': title,
                'detail': detail,
-               'schemaorg_json': subject
+               'schemaorg_json': json.dumps(subject)
                }
     return render(request, get_template(index, 'schema-org-index/detail-overview.html'), context)
 

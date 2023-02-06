@@ -29,22 +29,21 @@ SOCIAL_AUTH_GLOBUS_KEY = ''
 SOCIAL_AUTH_GLOBUS_SECRET = ''
 
 # ALLAUTH
-SOCIALACCOUNT_LOGIN_ON_GET=True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_PROVIDERS = {
     "cilogon": {
         # For each OAuth based provider, either add a ``SocialApp``
         # (``socialaccount`` app) containing the required client
         # credentials, or list them here:
         "APP": {
-            "client_id": "123",
-            "secret": "456",
+            "client_id": "cilogon:/client_id/34d8b8c1560547fa1023ceacc000dd96",
+            "secret": "CeAUGYES8B0mWiU9cD-OP0nUD_Ajkv51dhQVqezltgigcim_SliiFzpiAHibNQnrkIP7wPP-MOm9XDxVd1mnaQ",
             "key": ""
         },
         # These are provider-specific settings that can only be
         # listed here:
         "SCOPE": [
-            "profile",
-            "email",
+            "openid", "email", "profile", "org.cilogon.userinfo"
         ],
         "AUTH_PARAMS": {
             "access_type": "online",
@@ -52,12 +51,13 @@ SOCIALACCOUNT_PROVIDERS = {
         "VERIFIED_EMAIL": True,
     }
 }
+ACCOUNT_EMAIL_REQUIRED = True
 
 # This is a general Django setting if views need to redirect to login
 # https://docs.djangoproject.com/en/3.2/ref/settings/#login-url
 LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
-ACCOUNT_LOGOUT_REDIRECT_URL ='/accounts/login/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/email/'
 
 # This dictates which scopes will be requested on each user login

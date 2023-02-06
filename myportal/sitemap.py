@@ -10,6 +10,7 @@ from globus_portal_framework.gsearch import get_search_query, get_search_filters
 class GeoFileSitemap(Sitemap):
     changefreq = 'daily'
     priority = 0.6
+    protocol = 'https'
 
     def items(self):
         query = get_setting('DEFAULT_QUERY')
