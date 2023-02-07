@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import logging
 from pathlib import Path
+
+from django.template import context_processors
+
 from myportal import fields
 
 log = logging.getLogger(__name__)

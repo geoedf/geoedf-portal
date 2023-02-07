@@ -13,6 +13,10 @@ from rest_framework import status, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.functional import SimpleLazyObject
+
+
 
 class GetResourceSchemaorgRequest(serializers.Serializer):
     # id = serializers.IntegerField()
@@ -174,3 +178,9 @@ def index_selection(request):
 
 def temp_view(request):
     return render(request, 'schema-org-index/detail-overview.html', {})
+
+
+def site(request):
+    return {
+        'site': SimpleLazyObject(lambda: get_current_site(request)),
+    }
