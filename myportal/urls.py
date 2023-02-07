@@ -31,7 +31,8 @@ urlpatterns = [
     # Provides the basic search portal
     path('<custom_search:index>/resource/<uuid>', file_detail, name='resource'),
     path('<custom_search:index>/', mysearch, name='search'),
-    path('<custom_search:index>/api/resource/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
+    path('<custom_search:index>/api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
+    path('<custom_search:index>/api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
 
     path('', index_selection, name='index-selection-p'),
     path('', include('globus_portal_framework.urls')),
