@@ -15,7 +15,7 @@ class GeoFileSitemap(Sitemap):
     def items(self):
         query = get_setting('DEFAULT_QUERY')
         # filters = get_search_filters()
-        search_result = post_search('schema-org-index', query, [], None,
+        search_result = post_search('schema-org-index', query, [], AnonymousUser(),
                                     1)  # todo replace index with variable
         # print(f'[GeoFileSitemap | items] search_result={search_result}')
 
