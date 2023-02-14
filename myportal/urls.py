@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
+from django.views.generic import RedirectView
 from globus_portal_framework.urls import register_custom_index
 
 from myportal import views
@@ -34,7 +35,8 @@ urlpatterns = [
     path('<custom_search:index>/api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
     path('<custom_search:index>/api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
 
-    path('', index_selection, name='index-selection-p'),
+    # path('', index_selection, name='index-selection-p'),
+    path('', RedirectView.as_view(url="/schema-org-index/")),
     path('', include('globus_portal_framework.urls')),
     path('', include('social_django.urls', namespace='social')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),

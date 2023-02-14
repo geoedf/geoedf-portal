@@ -2,6 +2,7 @@ import json
 import os
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
 from globus_portal_framework import gsearch
 from globus_portal_framework.apps import get_setting
@@ -28,9 +29,15 @@ class GetResourceSchemaorg(APIView):
 
     @swagger_auto_schema(request_body=GetResourceSchemaorgRequest)
     def post(self, request, index, uuid):
+        print(f"[GetResourceSchemaorg] user={request.user}")
+        if not request.user.is_authenticated:
+            return Response(
+                data={"status": "Please log in first"},
+                status=status.HTTP_200_OK,
+            )
         serializer = GetResourceSchemaorgRequest(data=request.data)
         if serializer.is_valid():
-            subject = get_subject(index, uuid, request.user)
+            subject = get_subject(index, uuid, AnonymousUser())
             print(f"[GetResourceSchemaorg] subject={subject}")
             try:
                 endpoint = subject['all'][0]
@@ -78,9 +85,12 @@ class GetResourceSchemaorgList(APIView):
 
 def mysearch(request, index):
     query = get_search_query(request)
-    print(f'[mysearch]{query}')
+    # print(f'[mysearch]{query}')
     filters = get_search_filters(request)
-    search_result = post_search(index, query, filters, request.user,
+    print(f"[mysearch] user={AnonymousUser()}")
+    print(f"[mysearch] user={request.user}")
+
+    search_result = post_search(index, query, filters,  AnonymousUser(),
                                 request.GET.get('page', 1))
     print(f'[mysearch]search_result = {search_result}')
     context = {'search': search_result}
@@ -88,7 +98,7 @@ def mysearch(request, index):
 
 
 def file_detail(request, index, uuid):
-    subject = get_subject(index, uuid, request.user)
+    subject = get_subject(index, uuid, AnonymousUser())
     print(f"[file_detail] subject={subject}")
 
     endpoint = subject['all'][0]
