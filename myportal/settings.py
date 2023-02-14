@@ -61,6 +61,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 LOGIN_REDIRECT_URL = '/'
 
 # This dictates which scopes will be requested on each user login
