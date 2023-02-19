@@ -11,9 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import logging
 from pathlib import Path
-
 from django.template import context_processors
-
 from myportal import fields
 
 log = logging.getLogger(__name__)
@@ -61,7 +59,6 @@ ACCOUNT_EMAIL_REQUIRED = True
 LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
-
 LOGIN_REDIRECT_URL = '/'
 
 # This dictates which scopes will be requested on each user login
