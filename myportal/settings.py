@@ -47,7 +47,7 @@ SOCIALACCOUNT_PROVIDERS = {
             "openid", "email", "profile", "org.cilogon.userinfo"
         ],
         "AUTH_PARAMS": {
-            "access_type": "online",
+            "access_type": "offline",
         },
         "VERIFIED_EMAIL": True,
     }
@@ -59,7 +59,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/accounts/profile/'
 
 # This dictates which scopes will be requested on each user login
 SOCIAL_AUTH_GLOBUS_SCOPE = [
@@ -231,6 +231,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / "myportal" / "static",
+    BASE_DIR / "myportal" / "templates",
     'static/',
 ]
 

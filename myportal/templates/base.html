@@ -41,10 +41,10 @@
 
                 {% if backends.backends and request.user.is_authenticated %}
                     <li>
-                        <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
                     </li>
                     <li>
-                        <a class="nav-link" href="/">{{ request.user.username }}</a>
+                        <a class="nav-link" href="/user/profile/">{{ request.user.username }}</a>
                     </li>
                 {% elif  not request.user.is_authenticated %}
 {#                    'cilogon' in backends.backends and#}

@@ -27,13 +27,14 @@ schema_view = get_schema_view(
     ),
     public=True,
 )
-
 urlpatterns = [
     # Provides the basic search portal
     path('<custom_search:index>/resource/<uuid>', file_detail, name='resource'),
     path('<custom_search:index>/', mysearch, name='search'),
-    path('<custom_search:index>/api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
-    path('<custom_search:index>/api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
+
+    path('api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
+    path('api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
+    path('api/accounts/verify/', views.VerifyToken.as_view(), name='account-verify'),
 
     # path('', index_selection, name='index-selection-p'),
     path('', RedirectView.as_view(url="/schema-org-index/")),
@@ -47,6 +48,9 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('accounts/', include('allauth.urls')),
-    path('callback/', temp_view, name='temp-view')
+    path('accounts/profile/', views.GetAccountProfile.as_view(), name='account-profile'),
+    path('callback/', temp_view, name='temp-view'),
+
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

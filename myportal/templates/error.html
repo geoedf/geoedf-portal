@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block headextras %}
+    <meta charset="UTF-8">
+    <title>Error</title>
+    <style>
+        #error-title {
+            color: #ff6347;
+            font-size: 4rem;
+            margin-top: 4rem;
+            text-align: center;
+
+        }
+
+        #error-content {
+            color: #333;
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <h1 id="error-title">An Error Occurred</h1>
+    <p id="error-content">Sorry, an error occurred while processing your request. Please try again later.</p>
+{% endblock %}
