@@ -5,11 +5,9 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.generic import RedirectView
 from globus_portal_framework.urls import register_custom_index
-
-from myportal import views
+from .views import urlpatterns as views_urlpatterns
 from myportal.sitemap import GeoFileSitemap
-from myportal.views import mysearch, file_detail, temp_view, index_selection
-
+from myportal.views.views import index_selection
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
@@ -28,19 +26,9 @@ schema_view = get_schema_view(
     public=True,
 )
 urlpatterns = [
-    # Provides the basic search portal
-    path('<custom_search:index>/resource/<uuid>', file_detail, name='resource'),
-    path('<custom_search:index>/', mysearch, name='search'),
+    path('', include(views_urlpatterns)),
 
-    path('api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
-    path('api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
-    path('api/accounts/token/verify/', views.VerifyToken.as_view(), name='token-verify'),
-    path('api/accounts/token/code/', views.GetCode.as_view(), name='get-code'),
-    path('api/accounts/token/get/', views.GetToken.as_view(), name='token-get'),
-    path('api/accounts/token/refresh/', views.GetToken.as_view(), name='token-refresh'),
-    path('api/accounts/profile/', views.VerifyToken.as_view(), name='user-profile'),
-
-    # path('', index_selection, name='index-selection-p'),
+    path('index/selection/', index_selection, name='index-selection-p'),
     path('', RedirectView.as_view(url="/schema-org-index/")),
     path('', include('globus_portal_framework.urls')),
     path('', include('social_django.urls', namespace='social')),
@@ -50,11 +38,6 @@ urlpatterns = [
     # display page
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
-    path('accounts/', include('allauth.urls')),
-    path('accounts/profile/', views.GetAccountProfile.as_view(), name='account-profile'),
-    path('callback/', temp_view, name='temp-view'),
-
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
