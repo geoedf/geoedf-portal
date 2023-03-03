@@ -34,7 +34,11 @@ urlpatterns = [
 
     path('api/resource/get/<uuid>', views.GetResourceSchemaorg.as_view(), name='api-resource-get'),
     path('api/resource/list/', views.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
-    path('api/accounts/verify/', views.VerifyToken.as_view(), name='account-verify'),
+    path('api/accounts/token/verify/', views.VerifyToken.as_view(), name='token-verify'),
+    path('api/accounts/token/code/', views.GetCode.as_view(), name='get-code'),
+    path('api/accounts/token/get/', views.GetToken.as_view(), name='token-get'),
+    path('api/accounts/token/refresh/', views.GetToken.as_view(), name='token-refresh'),
+    path('api/accounts/profile/', views.VerifyToken.as_view(), name='user-profile'),
 
     # path('', index_selection, name='index-selection-p'),
     path('', RedirectView.as_view(url="/schema-org-index/")),

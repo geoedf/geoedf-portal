@@ -25,9 +25,6 @@ from django.utils.functional import SimpleLazyObject
 from myportal.utils import verify_cilogon_token
 
 INDEX_NAME = "schema-org-index"
-class GetResourceSchemaorgRequest(serializers.Serializer):
-    # id = serializers.IntegerField()
-    pass
 
 
 def has_valid_cilogon_token(headers):
@@ -38,6 +35,11 @@ def has_valid_cilogon_token(headers):
     if verify_cilogon_token(access_token) is None:
         return False
     return True
+
+
+class GetResourceSchemaorgRequest(serializers.Serializer):
+    # id = serializers.IntegerField()
+    pass
 
 
 class GetResourceSchemaorg(APIView):
@@ -51,7 +53,7 @@ class GetResourceSchemaorg(APIView):
             type=openapi.TYPE_STRING,
             required=True,
         ),
-    ],)
+    ], )
     def post(self, request, uuid):
 
         print(f"[GetResourceSchemaorg] user={request.user}")
@@ -88,6 +90,12 @@ class GetResourceSchemaorgList(APIView):
 
     @swagger_auto_schema(request_body=GetResourceSchemaorgListRequest)
     def post(self, request):
+        if not has_valid_cilogon_token(request.headers):
+            return Response(
+                data={"status": "Please log in first"},
+                status=status.HTTP_200_OK,
+            )
+
         serializer = GetResourceSchemaorgRequest(data=request.data)
         if serializer.is_valid():
             subject = get_subject(INDEX_NAME, request.id_list, request.user)  # todo
@@ -235,9 +243,20 @@ class GetAccountProfile(View):
         return render(request, 'account/profile.html', context)
 
 
-class VerifyTokenRequest(serializers.Serializer):
+class GetTokenRequest(serializers.Serializer):
     header_token = serializers.CharField()
     pass
+
+
+class GetToken(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(request_body=GetTokenRequest, )
+    def post(self, request):
+        return Response(
+            data={"status": "OK", "token": "bearer access token"},
+            status=status.HTTP_200_OK,
+        )
 
 
 class VerifyToken(APIView):
@@ -280,3 +299,11 @@ class GetDomainName(View):
     def get(self, request, *args, **kwargs):
         site = Site.objects.get(id=1)
         return site.domain
+
+
+class GetCode(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema()
+    def get(self, request):
+        return Response({"url": "https://cilogon.org/authorize?response_type=code&client_id=cilogon:/client_id/34d8b8c1560547fa1023ceacc000dd96&redirect_uri=https://localhost:8000/accounts/cilogon/login/callback/&scope=openid+profile+email+org.cilogon.userinfo+edu.uiuc.ncsa.myproxy.getcert"})
