@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
-from myportal.constants import INDEX_NAME
+from myportal.constants import GLOBUS_INDEX_NAME
 from myportal.utils import verify_cilogon_token
 
 
@@ -38,7 +38,7 @@ class GetResourceSchemaorg(APIView):
             )
         serializer = GetResourceSchemaorgRequest(data=request.data)
         if serializer.is_valid():
-            subject = get_subject(INDEX_NAME, uuid, AnonymousUser())
+            subject = get_subject(GLOBUS_INDEX_NAME, uuid, AnonymousUser())
             print(f"[GetResourceSchemaorg] subject={subject}")
             try:
                 endpoint = subject['all'][0]
@@ -72,7 +72,7 @@ class GetResourceSchemaorgList(APIView):
 
         serializer = GetResourceSchemaorgRequest(data=request.data)
         if serializer.is_valid():
-            subject = get_subject(INDEX_NAME, request.id_list, request.user)  # todo
+            subject = get_subject(GLOBUS_INDEX_NAME, request.id_list, request.user)  # todo
             print(f"[ListResourceSchemaorg] subject={subject}")
             try:
                 endpoint = subject['all'][0]

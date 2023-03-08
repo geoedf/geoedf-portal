@@ -9,22 +9,6 @@ from rest_framework.views import APIView
 import requests
 
 
-class GetAccountProfile(View):
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return render(request, 'error.html', {})
-        user = request.user
-        # print(f"[GetAccountProfile] user={user.socialaccount_set}")
-        # cilogon_account = request.user.socialaccount_set.filter(provider='cilogon').first()
-        #
-        # cilogon_access_token = cilogon_account.socialtoken_set.filter(token_type='access_token').first().token
-        # cilogon_refresh_token = cilogon_account.socialtoken_set.filter(token_type='refresh_token').first().token
-        # print(f"[GetAccountProfile] cilogon_access_token={cilogon_access_token}")
-        # print(f"[GetAccountProfile] cilogon_refresh_token={cilogon_refresh_token}")
-
-        context = {'username': request.user}
-        return render(request, 'account/profile.html', context)
-
 
 class GetTokenRequest(serializers.Serializer):
     header_token = serializers.CharField()

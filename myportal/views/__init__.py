@@ -1,7 +1,9 @@
 from django.urls import path, include
-
 from myportal.views import api_account, api_resource
-from myportal.views.views import temp_view, file_detail, mysearch
+from myportal.views.views import temp_view, file_detail, mysearch, GetAccountProfile
+from globus_portal_framework.urls import register_custom_index
+
+register_custom_index('custom_search', ['schema-org-index'])
 
 urlpatterns = [
     # Provides the basic search portal
@@ -9,7 +11,7 @@ urlpatterns = [
     path('<custom_search:index>/', mysearch, name='search'),
 
     path('accounts/', include('allauth.urls')),
-    path('accounts/profile/', api_account.GetAccountProfile.as_view(), name='account-profile'),
+    path('accounts/profile/', GetAccountProfile.as_view(), name='account-profile'),
     path('callback/', temp_view, name='temp-view'),
 
     path('api/resource/get/<uuid>', api_resource.GetResourceSchemaorg.as_view(), name='api-resource-get'),

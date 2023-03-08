@@ -1,1 +1,1 @@
-INDEX_NAME = "schema-org-index"
+GLOBUS_INDEX_NAME = "schema-org-index"

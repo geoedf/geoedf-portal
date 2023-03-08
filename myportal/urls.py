@@ -4,14 +4,12 @@ from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.generic import RedirectView
-from globus_portal_framework.urls import register_custom_index
 from .views import urlpatterns as views_urlpatterns
 from myportal.sitemap import GeoFileSitemap
 from myportal.views.views import index_selection
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
-register_custom_index('custom_search', ['schema-org-index'])
 
 sitemaps = {
     'geo_file': GeoFileSitemap,
