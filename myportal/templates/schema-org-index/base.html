@@ -38,15 +38,15 @@
 
             {%if  request.user.is_authenticated %}
             <li>
-              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+              <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
             </li>
             <li>
-              <a class="nav-link" href="/">{{request.user.username }}</a>
+              <a class="nav-link" href="/accounts/profile/">{{request.user.username }}</a>
             </li>
             {% elif not request.user.is_authenticated %}
 {#                'globus' in backends.backends and #}
             <li>
-              <a class="nav-link" href="{% provider_login_url 'cilogon' next='http://localhost:8000/callback' %}">Login</a>
+              <a class="nav-link" href="{% provider_login_url 'cilogon' next='http://localhost:8000/accounts/cilogon/login/callback/' %}">Login</a>
 {#              <a class="nav-link" href="{% url 'social:begin' 'cilogon' %}?next={{ request.get_full_path|urlencode }}">Login</a>#}
             </li>
             {% endif %}

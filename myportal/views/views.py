@@ -1,86 +1,23 @@
 import json
 import os
 
+import requests
+from allauth.socialaccount.models import SocialToken
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
+from django.http import HttpResponseBadRequest
+from django.views import View
+from drf_yasg import openapi
 from globus_portal_framework import gsearch
 from globus_portal_framework.apps import get_setting
 from globus_portal_framework.gsearch import post_search, get_search_query, get_search_filters, get_template, \
     get_subject, get_index
 from django.shortcuts import render
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, permissions, serializers
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.functional import SimpleLazyObject
 
-
-
-class GetResourceSchemaorgRequest(serializers.Serializer):
-    # id = serializers.IntegerField()
-    pass
-
-
-class GetResourceSchemaorg(APIView):
-    permission_classes = (permissions.AllowAny,)
-
-    @swagger_auto_schema(request_body=GetResourceSchemaorgRequest)
-    def post(self, request, index, uuid):
-        print(f"[GetResourceSchemaorg] user={request.user}")
-        if not request.user.is_authenticated:
-            return Response(
-                data={"status": "Please log in first"},
-                status=status.HTTP_200_OK,
-            )
-        serializer = GetResourceSchemaorgRequest(data=request.data)
-        if serializer.is_valid():
-            subject = get_subject(index, uuid, AnonymousUser())
-            print(f"[GetResourceSchemaorg] subject={subject}")
-            try:
-                endpoint = subject['all'][0]
-            except KeyError:
-                return Response(
-                    data={"status": "UUID does not exist"},
-                    status=status.HTTP_200_OK,
-                )
-            schemaorg_json = endpoint['schemaorgJson']
-            return Response(
-                data={"status": "OK", "schemaorg": schemaorg_json},
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class GetResourceSchemaorgListRequest(serializers.Serializer):
-    id_list = serializers.IntegerField()
-
-
-
-class GetResourceSchemaorgList(APIView):
-    permission_classes = (permissions.AllowAny,)
-
-    @swagger_auto_schema(request_body=GetResourceSchemaorgListRequest)
-    def post(self, request, index):
-        serializer = GetResourceSchemaorgRequest(data=request.data)
-        if serializer.is_valid():
-            subject = get_subject(index, request.id_list, request.user)# todo
-            print(f"[ListResourceSchemaorg] subject={subject}")
-            try:
-                endpoint = subject['all'][0]
-            except KeyError:
-                return Response(
-                    data={"status": "UUID does not exist"},
-                    status=status.HTTP_200_OK,
-                )
-            schemaorg_json = endpoint['schemaorgJson']
-            return Response(
-                data={"status": "OK", "schemaorg_list": [schemaorg_json]},
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from myportal.constants import GLOBUS_INDEX_NAME
 
 
 def mysearch(request, index):
@@ -90,7 +27,7 @@ def mysearch(request, index):
     print(f"[mysearch] user={AnonymousUser()}")
     print(f"[mysearch] user={request.user}")
 
-    search_result = post_search(index, query, filters,  AnonymousUser(),
+    search_result = post_search(GLOBUS_INDEX_NAME, query, filters, AnonymousUser(),
                                 request.GET.get('page', 1))
     print(f'[mysearch]search_result = {search_result}')
     context = {'search': search_result}
@@ -172,8 +109,6 @@ def set_django_configurations():
 set_django_configurations()
 
 
-
-
 def index_selection(request):
     print(f"[index_selection] request={request}")
 
@@ -194,3 +129,26 @@ def site(request):
     return {
         'site': SimpleLazyObject(lambda: get_current_site(request)),
     }
+
+
+class GetDomainName(View):
+    def get(self, request, *args, **kwargs):
+        site = Site.objects.get(id=1)
+        return site.domain
+
+
+class GetAccountProfile(View):
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return render(request, 'error.html', {})
+        user = request.user
+        # print(f"[GetAccountProfile] user={user.socialaccount_set}")
+        # cilogon_account = request.user.socialaccount_set.filter(provider='cilogon').first()
+        #
+        # cilogon_access_token = cilogon_account.socialtoken_set.filter(token_type='access_token').first().token
+        # cilogon_refresh_token = cilogon_account.socialtoken_set.filter(token_type='refresh_token').first().token
+        # print(f"[GetAccountProfile] cilogon_access_token={cilogon_access_token}")
+        # print(f"[GetAccountProfile] cilogon_refresh_token={cilogon_refresh_token}")
+
+        context = {'username': request.user}
+        return render(request, 'account/profile.html', context)
