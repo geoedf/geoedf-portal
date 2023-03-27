@@ -27,3 +27,6 @@ services:
       - 8000
 #    depends_on:
 #      - db
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
+    network_mode: bridge
