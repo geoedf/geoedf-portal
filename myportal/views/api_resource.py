@@ -196,7 +196,6 @@ def get_globus_index_submit_taskid(resource):
 class GetResourceStatusRequest(serializers.Serializer):
     # id = serializers.IntegerField()
     uuid = serializers.CharField()
-    # publish_type = serializers.CharField()
     pass
 
 
@@ -213,8 +212,7 @@ class GetResourceStatus(APIView):
         ),
     ], )
     def post(self, request):
-
-        print(f"[PublishResource] user={request.user}")
+        print(f"[GetResourceStatus] user={request.user}")
         # if not has_valid_cilogon_token(request.headers):
         #     return Response(
         #         data={"status": "Please log in first"},
@@ -223,15 +221,70 @@ class GetResourceStatus(APIView):
         serializer = GetResourceStatusRequest(data=request.data)
         if serializer.is_valid():
             # file_uuid = str(uuid.uuid4())
+            uuid = serializer.validated_data['uuid']
+            print(f"[GetResourceStatus] uuid={uuid}")
+            try:
+                resource = Resource.objects.get(uuid=uuid)
+            except Exception as e:
+                return Response(
+                    data={"msg": f"Error info = {e}"},
+                    status=status.HTTP_200_OK,
+                )
+
             return Response(
                 data={"status": "OK",
-                      "uuid": serializer.validated_data['uuid'],
-                      # "uuid": serializer.data['id'],
-                      "file_path": "data/files/Riv2",
+                      "uuid": resource.uuid,
+                      "file_path": resource.path,
                       # "file_path": serializer.validated_data['path'],
-                      "task_id": "d03eb370-49a9-4d59-8791-5bcf9635d65a",
+                      "task_id": resource.task_id,
                       "task_status": "tasks completed successfully",
                       },
                 status=status.HTTP_201_CREATED,
             )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UpdateResourceRequest(serializers.Serializer):
+    uuid = serializers.IntegerField()
+    publication_name = serializers.CharField()
+    path = serializers.CharField()
+    resource_type = serializers.CharField()
+    user_id = serializers.CharField()
+    pass
+
+
+class UpdateResource(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(request_body=UpdateResourceRequest, manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            openapi.IN_HEADER,
+            description='Authentication token',
+            type=openapi.TYPE_STRING,
+            required=True,
+        ),
+    ], )
+    def post(self, request):
+        print(f"[UpdateResource] user={request.user}")
+
+        if not has_valid_cilogon_token(request.headers):
+            return Response(
+                data={"status": "Please log in first"},
+                status=status.HTTP_200_OK,
+            )
+        serializer = UpdateResourceRequest(data=request.data)
+        if serializer.is_valid():
+            resource = Resource.objects.get(uuid=serializer.validated_data['uuid'])
+            resource.task_id = serializer.validated_data['task_id']
+            resource.user_id = serializer.validated_data['user_id']
+            resource.save()
+            print(f"[UpdateResource] resource={resource.__str__()}")
+
+            return Response(
+                data=json.dumps(resource),
+                status=status.HTTP_200_OK,
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
