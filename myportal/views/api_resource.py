@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
-from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME
+from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token
 import pika
@@ -107,8 +107,9 @@ def has_valid_cilogon_token(headers):
 
 class PublishResourceRequest(serializers.Serializer):
     # id = serializers.IntegerField()
-    filepath = serializers.CharField()
-    publish_type = serializers.CharField()
+    publication_name = serializers.CharField()
+    path = serializers.CharField()
+    resource_type = serializers.CharField()
     pass
 
 
@@ -140,27 +141,25 @@ class PublishResource(APIView):
         serializer = PublishResourceRequest(data=request.data)
         if serializer.is_valid():
             file_uuid = str(uuid.uuid4())
-            resource = Resource(uuid=file_uuid, path=serializer.validated_data['filepath'])
+            resource = Resource(uuid=file_uuid,
+                                path=serializer.validated_data['path'],
+                                resource_type=serializer.validated_data['resource_type'])
             resource.save()
             print(f"[PublishResource] resource={resource.__str__()}")
 
             publish_to_globus_index(resource)
+            task_id = get_globus_index_submit_taskid(resource)
+            resource.task_id = task_id
+            resource.save()
             return Response(
-                data={"status": "OK", "uuid": file_uuid,
-                      "file_path": "data/files/user/wrfinput_private.nc",
-                      "task_id": "d03eb370-49a9-4d59-8791-5bcf9635d65a",
+                data={"status": "Submitted", "uuid": file_uuid,
+                      "path": serializer.validated_data['path'],
+                      "task_id": task_id,
                       },
                 status=status.HTTP_201_CREATED,
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-RMQ_HOST = 'rabbitmq-server'
-RMQ_HOST_IP = '172.17.0.3'
-# RMQ_HOST = 'some-rabbit'
-RMQ_USER = 'guest'
-RMQ_PASS = 'guest'
 
 
 def publish_to_globus_index(resource):
@@ -189,9 +188,14 @@ def publish_to_globus_index(resource):
     connection.close()
 
 
+def get_globus_index_submit_taskid(resource):
+    # "d03eb370-49a9-4d59-8791-5bcf9635d65a"
+    return uuid.uuid4()
+
+
 class GetResourceStatusRequest(serializers.Serializer):
     # id = serializers.IntegerField()
-    # id = serializers.CharField()
+    uuid = serializers.CharField()
     # publish_type = serializers.CharField()
     pass
 
@@ -211,19 +215,20 @@ class GetResourceStatus(APIView):
     def post(self, request):
 
         print(f"[PublishResource] user={request.user}")
-        if not has_valid_cilogon_token(request.headers):
-            return Response(
-                data={"status": "Please log in first"},
-                status=status.HTTP_200_OK,
-            )
+        # if not has_valid_cilogon_token(request.headers):
+        #     return Response(
+        #         data={"status": "Please log in first"},
+        #         status=status.HTTP_200_OK,
+        #     )
         serializer = GetResourceStatusRequest(data=request.data)
         if serializer.is_valid():
             # file_uuid = str(uuid.uuid4())
             return Response(
                 data={"status": "OK",
-                      "uuid": "d03eb370-49a9-4d59-8791-5bcf9635d65a",
+                      "uuid": serializer.validated_data['uuid'],
                       # "uuid": serializer.data['id'],
-                      "file_path": "data/files/user/wrfinput_private.nc",
+                      "file_path": "data/files/Riv2",
+                      # "file_path": serializer.validated_data['path'],
                       "task_id": "d03eb370-49a9-4d59-8791-5bcf9635d65a",
                       "task_status": "tasks completed successfully",
                       },
