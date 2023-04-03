@@ -5,16 +5,20 @@ from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponseBadRequest
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
 from drf_yasg.utils import swagger_serializer_method
+
 from globus_portal_framework import get_subject
 from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
+
 from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token
 import pika
+
 
 
 class GetResourceSchemaorgRequest(serializers.Serializer):
@@ -288,3 +292,4 @@ class UpdateResource(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

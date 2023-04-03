@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/resource/publish/', api_resource.PublishResource.as_view(), name='api-resource-publish'),
     path('api/resource/status/', api_resource.GetResourceStatus.as_view(), name='api-resource-status'),
     path('api/resource/update/', api_resource.UpdateResource.as_view(), name='api-resource-update'), # update resource info
+
     path('api/accounts/token/verify/', api_account.VerifyToken.as_view(), name='token-verify'),
     path('api/accounts/token/code/', api_account.GetCode.as_view(), name='get-code'),
     path('api/accounts/token/get/', api_account.GetToken.as_view(), name='token-get'),
