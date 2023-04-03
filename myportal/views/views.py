@@ -41,8 +41,6 @@ def file_detail(request, index, uuid):
     endpoint = subject['all'][0]
 
     schemaorg_json = endpoint['schemaorgJson']
-    print("***")
-    print(f"[file_detail] schemaorg_json={schemaorg_json}")
 
     detail = {'id': schemaorg_json['@id'],
               # 'subject': subject['subject'],
@@ -62,13 +60,17 @@ def file_detail(request, index, uuid):
     if 'temporalCoverage' in schemaorg_json:
         detail['temporal_coverage'] = schemaorg_json['temporalCoverage']
 
-    print(f"[file_detail] detail={detail}")
+    # print(f"[file_detail] detail={detail}")
+
     title = schemaorg_json['name']
 
     context = {'title': title,
                'detail': detail,
-               'schemaorg_json': json.dumps(subject)
+               'schemaorg_json': json.dumps(subject, indent=4)
                }
+
+    # print(f"[file_detail] schemaorg_json={context['schemaorg_json']}")
+
     return render(request, get_template(index, 'schema-org-index/detail-overview.html'), context)
 
 

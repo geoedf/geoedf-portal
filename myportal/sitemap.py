@@ -1,6 +1,7 @@
 import datetime
 import time
 
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from globus_portal_framework.apps import get_setting
@@ -21,7 +22,9 @@ class GeoFileSitemap(Sitemap):
 
         id_list = []
         for subject_data in search_result['search_results']:
-            print(f'[GeoFileSitemap | items] subject_data={subject_data}')
+            # print(f'[GeoFileSitemap | items] subject_data={subject_data["subject"]}')
+            # print(f'[GeoFileSitemap | items] subject_data={subject_data}')
+
 
             id_list.append(subject_data['subject'])
 
