@@ -34,7 +34,7 @@ presQT_tests = {'Unique Identifier': 'https://w3id.org/FAIR_Tests/tests/gen2_uni
                 'Data Knowledge Representation Language (strong)': 'https://w3id.org/FAIR_Tests/tests/gen2_data_kr_language_strong',
                 'Metadata uses FAIR vocabularies (strong)': 'https://w3id.org/FAIR_Tests/tests/gen2_metadata_uses_fair_vocabularies_strong',
                 'Metadata Includes License (weak)': 'https://w3id.org/FAIR_Tests/tests/gen2_metadata_includes_license_weak'}
-subject = 'http://localhost:8002/schema-org-index/resource/a7d9795b-e799-4761-9289-a8643f06bdb0'
+subject = 'http://localhost:8000/schema-org-index/resource/a7d9795b-e799-4761-9289-a8643f06bdb0'
 # subject = '10.5072/zenodo.926573'
 
 

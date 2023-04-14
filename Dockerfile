@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM --platform=$BUILDPLATFORM python:3.10
 USER root
 SHELL ["/bin/bash", "-c"]
 RUN mkdir /code
