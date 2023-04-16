@@ -5,6 +5,7 @@ on: [push]
 jobs:
   docker:
     runs-on: ubuntu-latest
+    environment: autobuild_env
     steps:
       -
         name: Set up QEMU
