@@ -1,4 +1,4 @@
-name: GitHub Actions Demo
+name: Building AMD64 Images
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
 
@@ -24,6 +24,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
           tags: registry.anvil.rcac.purdue.edu/geoedf/geoedf-portal_web:10
