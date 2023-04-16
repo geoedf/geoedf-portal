@@ -23,7 +23,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./app.Dockerfile
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
           tags: yiqingqu/geoedf-portal_web:latest
