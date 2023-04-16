@@ -66,7 +66,7 @@ def file_detail(request, index, uuid):
 
     context = {'title': title,
                'detail': detail,
-               'schemaorg_json': json.dumps(subject, indent=4)
+               'schemaorg_json': json.dumps(schemaorg_json, indent=4)
                }
 
     # print(f"[file_detail] schemaorg_json={context['schemaorg_json']}")
