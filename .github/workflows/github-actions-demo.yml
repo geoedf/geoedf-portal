@@ -13,9 +13,8 @@ jobs:
         name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -26,6 +25,9 @@ jobs:
           context: .
           file: ./app.Dockerfile
           platforms: linux/amd64
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
           push: true
           tags: registry.anvil.rcac.purdue.edu/geoedf/geoedf-portal_web:10
           secrets: |
