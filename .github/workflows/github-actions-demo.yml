@@ -29,7 +29,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: registry.anvil.rcac.purdue.edu/geoedf/geoedf-portal_web:10
+          tags: registry.anvil.rcac.purdue.edu/geoedf/geoedf-portal_web:11
           #          tags: yiqingqu/geoedf-portal_web:latest
           secrets: |
             "github_token=${{ secrets.GITHUB_TOKEN }}"
