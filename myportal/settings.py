@@ -70,6 +70,7 @@ SOCIAL_AUTH_GLOBUS_SCOPE = [
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ["https://geoedf-portal.anvilcloud.rcac.purdue.edu"]
 
 PROJECT_TITLE = 'GeoEDF'
 SEARCH_INDEXES = {

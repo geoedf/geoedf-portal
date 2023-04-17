@@ -94,7 +94,7 @@ def update_social_app():
         site = Site.objects.get(id=1)
         # host = getattr(settings, "SITE_NAME", None)
         host = os.environ.get('SOCIAL_APP_cilogon', 'localhost:8000')
-        print(f"[update_site_domain] host={host}")
+        print(f"[update_social_app] host={host}")
         site.domain = host
         site.name = host
         site.save()
