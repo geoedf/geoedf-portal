@@ -7,7 +7,7 @@ register_custom_index('custom_search', ['schema-org-index'])
 
 urlpatterns = [
     # Provides the basic search portal
-    path('<custom_search:index>/resource/<uuid>', file_detail, name='resource'),
+    path('resource/<uuid>', file_detail, name='resource'),
     path('<custom_search:index>/', mysearch, name='search'),
 
     path('accounts/', include('allauth.urls')),

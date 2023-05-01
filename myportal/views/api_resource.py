@@ -1,5 +1,6 @@
 import json
 import uuid
+import yaml
 
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponseBadRequest
@@ -13,60 +14,52 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
-
 from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token
 import pika
 
 
-
-class GetResourceSchemaorgRequest(serializers.Serializer):
-    # id = serializers.IntegerField()
-    pass
-
-
 class GetResourceSchemaorg(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=GetResourceSchemaorgRequest, manual_parameters=[
-        openapi.Parameter(
-            'Authorization',
-            openapi.IN_HEADER,
-            description='Authentication token',
-            type=openapi.TYPE_STRING,
-            required=True,
-        ),
-    ], )
+    @swagger_auto_schema()
     def post(self, request, uuid):
-
+        """
+            Retrieve the Schema.Org metadata for a resource by its UUID.
+        """
         print(f"[GetResourceSchemaorg] user={request.user}")
         if not has_valid_cilogon_token(request.headers):
             return Response(
                 data={"status": "Please log in first"},
                 status=status.HTTP_200_OK,
             )
-        serializer = GetResourceSchemaorgRequest(data=request.data)
-        if serializer.is_valid():
-            subject = get_subject(GLOBUS_INDEX_NAME, uuid, AnonymousUser())
-            print(f"[GetResourceSchemaorg] subject={subject}")
-            try:
-                endpoint = subject['all'][0]
-            except KeyError:
-                return Response(
-                    data={"status": "UUID does not exist"},
-                    status=status.HTTP_200_OK,
-                )
-            schemaorg_json = endpoint['schemaorgJson']
+
+        subject = get_subject(GLOBUS_INDEX_NAME, uuid, AnonymousUser())
+        print(f"[GetResourceSchemaorg] subject={subject}")
+        try:
+            endpoint = subject['all'][0]
+        except KeyError:
             return Response(
-                data={"status": "OK", "schemaorg": schemaorg_json},
-                status=status.HTTP_201_CREATED,
+                data={"status": "UUID does not exist"},
+                status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        schemaorg_json = endpoint['schemaorgJson']
+        return Response(
+            data={"status": "OK", "schemaorg": schemaorg_json},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class GetResourceSchemaorgListRequest(serializers.Serializer):
-    id_list = serializers.IntegerField()
+    id_list = serializers.ListField(help_text='The list of resource UUIDs')
+
+    class Meta:
+        swagger_schema_fields = {
+            "example": {
+                "id_list": ["62b507fb-f69b-4e7c-a112-4302dd269146", "6bead1d9-7383-4676-9cef-9190f5e74064"],
+            }
+        }
 
 
 class GetResourceSchemaorgList(APIView):
@@ -74,13 +67,16 @@ class GetResourceSchemaorgList(APIView):
 
     @swagger_auto_schema(request_body=GetResourceSchemaorgListRequest)
     def post(self, request):
+        """
+            Retrieve the Schema.Org metadata for resources by a list of UUIDs.
+        """
         if not has_valid_cilogon_token(request.headers):
             return Response(
                 data={"status": "Please log in first"},
                 status=status.HTTP_200_OK,
             )
 
-        serializer = GetResourceSchemaorgRequest(data=request.data)
+        serializer = GetResourceSchemaorgListRequest(data=request.data)
         if serializer.is_valid():
             subject = get_subject(GLOBUS_INDEX_NAME, request.id_list, request.user)  # todo
             print(f"[ListResourceSchemaorg] subject={subject}")
@@ -110,11 +106,38 @@ def has_valid_cilogon_token(headers):
 
 
 class PublishResourceRequest(serializers.Serializer):
-    # id = serializers.IntegerField()
-    publication_name = serializers.CharField()
-    path = serializers.CharField()
-    resource_type = serializers.CharField()
-    pass
+    RESOURCE_TYPE_CHOICES = [
+        ('single', 'Single'),
+        ('list', 'List'),
+        ('multiple', 'Multiple'),
+    ]
+
+    publication_name = serializers.CharField(
+        allow_null=True,
+        help_text='The name of the publication.',
+    )
+    resource_type = serializers.ChoiceField(
+        choices=RESOURCE_TYPE_CHOICES,
+        help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
+    )
+    path = serializers.CharField(
+        allow_null=True,
+        help_text='The path to the resource. Only valid if resource_type is "single" or "multiple".',
+    )
+    path_list = serializers.ListField(
+        child=serializers.CharField(),
+        allow_null=True,
+        help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
+    )
+
+    class Meta:
+        swagger_schema_fields = {
+            "example": {
+                "publication_name": "Riv2",
+                "resource_type": "multiple",
+                "path_list": ["data/files/Riv2", "data/files/wrfinput_d0x.nc"],
+            }
+        }
 
 
 # class PublishResourceResponseSerializer():
@@ -125,16 +148,23 @@ class PublishResourceRequest(serializers.Serializer):
 class PublishResource(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=PublishResourceRequest, manual_parameters=[
-        openapi.Parameter(
-            'Authorization',
-            openapi.IN_HEADER,
-            description='Authentication token',
-            type=openapi.TYPE_STRING,
-            required=True,
-        ),
-    ], )
+    @swagger_auto_schema(request_body=PublishResourceRequest,
+                         # manual_parameters=[
+                         #     openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
+                         #                       type=openapi.TYPE_STRING, required=True, ),
+                         # ],
+                         responses={
+                             status.HTTP_200_OK: openapi.Response('Success message',
+                                                                  schema=openapi.Schema(type='object')),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response('Error message',
+                                                                           schema=openapi.Schema(type='object')),
+                         },
+                         )
     def post(self, request):
+        """
+            Calling this API will create a Resource object in database and publish it.
+            Upon successful creation, a message will be sent to a RabbitMQ queue named 'geoedf-all'. The message will then be consumed by a metadata extractor.
+        """
         print(f"[PublishResource] user={request.user}")
         # todo recover login check
         # if not has_valid_cilogon_token(request.headers):
@@ -206,16 +236,11 @@ class GetResourceStatusRequest(serializers.Serializer):
 class GetResourceStatus(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=GetResourceStatusRequest, manual_parameters=[
-        openapi.Parameter(
-            'Authorization',
-            openapi.IN_HEADER,
-            description='Authentication token',
-            type=openapi.TYPE_STRING,
-            required=True,
-        ),
-    ], )
+    @swagger_auto_schema(request_body=GetResourceStatusRequest, manual_parameters=[], )
     def post(self, request):
+        """
+            Retrieve the basic infomation for a resource by its UUID.
+        """
         print(f"[GetResourceStatus] user={request.user}")
         # if not has_valid_cilogon_token(request.headers):
         #     return Response(
@@ -248,29 +273,52 @@ class GetResourceStatus(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class UpdateResourceRequest(serializers.Serializer):
     uuid = serializers.IntegerField()
-    publication_name = serializers.CharField()
-    path = serializers.CharField()
-    resource_type = serializers.CharField()
+    publication_name = serializers.CharField(
+        allow_null=True,
+        help_text='The name of the publication.',
+    )
+    # resource_type = serializers.ChoiceField(
+    #     choices=RESOURCE_TYPE_CHOICES,
+    #     help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
+    # )
+    path = serializers.CharField(
+        allow_null=True,
+        help_text='The path to the resource. Only valid if resource_type is "single" or "multiple".',
+    )
+    path_list = serializers.ListField(
+        child=serializers.CharField(),
+        allow_null=True,
+        help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
+    )
     user_id = serializers.CharField()
-    pass
+
+    class Meta:
+        swagger_schema_fields = {
+            "example": {
+                "publication_name": "Riv2",
+                "resource_type": "multiple",
+                "path_list": ["data/files/Riv2", "data/files/wrfinput_d0x.nc"],
+            }
+        }
 
 
 class UpdateResource(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=UpdateResourceRequest, manual_parameters=[
-        openapi.Parameter(
-            'Authorization',
-            openapi.IN_HEADER,
-            description='Authentication token',
-            type=openapi.TYPE_STRING,
-            required=True,
-        ),
-    ], )
+    @swagger_auto_schema(request_body=UpdateResourceRequest,
+                         responses={
+                             status.HTTP_200_OK: openapi.Response('Success message',
+                                                                  schema=openapi.Schema(type='object')),
+                             status.HTTP_400_BAD_REQUEST: openapi.Response('Error message',
+                                                                           schema=openapi.Schema(type='object')),
+                         }, )
     def post(self, request):
+        """
+            Calling this API will update the existed Resource object in database.
+            Mainly used to update the status queried from Globus Index submission task.
+        """
         print(f"[UpdateResource] user={request.user}")
 
         if not has_valid_cilogon_token(request.headers):
@@ -292,4 +340,3 @@ class UpdateResource(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

@@ -34,7 +34,8 @@ def mysearch(request, index):
     return render(request, get_template(index, 'schema-org-index/components/search-results.html'), context)
 
 
-def file_detail(request, index, uuid):
+def file_detail(request, uuid):
+    index = GLOBUS_INDEX_NAME
     subject = get_subject(index, uuid, AnonymousUser())
     print(f"[file_detail] subject={subject}")
 
