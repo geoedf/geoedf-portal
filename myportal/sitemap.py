@@ -16,17 +16,20 @@ class GeoFileSitemap(Sitemap):
     def items(self):
         query = get_setting('DEFAULT_QUERY')
         # filters = get_search_filters()
-        search_result = post_search('schema-org-index', query, [], AnonymousUser(),
-                                    1)  # todo replace index with variable
-        # print(f'[GeoFileSitemap | items] search_result={search_result}')
-
         id_list = []
-        for subject_data in search_result['search_results']:
-            # print(f'[GeoFileSitemap | items] subject_data={subject_data["subject"]}')
-            # print(f'[GeoFileSitemap | items] subject_data={subject_data}')
+
+        for page in range(1, 2):
+
+            search_result = post_search('schema-org-index', query, [], AnonymousUser(),
+                                        page)  # todo replace index with variable
+            # print(f'[GeoFileSitemap | items] search_result={search_result}')
+
+            for subject_data in search_result['search_results']:
+                # print(f'[GeoFileSitemap | items] subject_data={subject_data["subject"]}')
+                # print(f'[GeoFileSitemap | items] subject_data={subject_data}')
 
 
-            id_list.append(subject_data['subject'])
+                id_list.append(subject_data['subject'])
 
         return id_list
 
@@ -35,4 +38,4 @@ class GeoFileSitemap(Sitemap):
 
     def location(self, obj):
         # reverse(obj)
-        return reverse('resource', kwargs={'index': 'schema-org-index', 'uuid': obj})
+        return reverse('resource', kwargs={'uuid': obj})
