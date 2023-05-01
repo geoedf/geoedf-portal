@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 
 from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
 from myportal.models import Resource
-from myportal.utils import verify_cilogon_token
+from myportal.utils import verify_cilogon_token, get_resource_id_list
 import pika
 
 
@@ -24,7 +24,7 @@ class GetResourceSchemaorg(APIView):
     permission_classes = (permissions.AllowAny,)
 
     @swagger_auto_schema()
-    def post(self, request, uuid):
+    def get(self, request, uuid):
         """
             Retrieve the Schema.Org metadata for a resource by its UUID.
         """
@@ -65,34 +65,38 @@ class GetResourceSchemaorgListRequest(serializers.Serializer):
 class GetResourceSchemaorgList(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=GetResourceSchemaorgListRequest)
-    def post(self, request):
+    @swagger_auto_schema()
+    def get(self, request):
         """
-            Retrieve the Schema.Org metadata for resources by a list of UUIDs.
+            Retrieve the list of UUIDs for all resources. (todo: Pagination)
         """
         if not has_valid_cilogon_token(request.headers):
             return Response(
                 data={"status": "Please log in first"},
                 status=status.HTTP_200_OK,
             )
-
-        serializer = GetResourceSchemaorgListRequest(data=request.data)
-        if serializer.is_valid():
-            subject = get_subject(GLOBUS_INDEX_NAME, request.id_list, request.user)  # todo
-            print(f"[ListResourceSchemaorg] subject={subject}")
-            try:
-                endpoint = subject['all'][0]
-            except KeyError:
-                return Response(
-                    data={"status": "UUID does not exist"},
+        list = get_resource_id_list()
+        return Response(
+                    data={"list": list, "total":  len(list)},
                     status=status.HTTP_200_OK,
                 )
-            schemaorg_json = endpoint['schemaorgJson']
-            return Response(
-                data={"status": "OK", "schemaorg_list": [schemaorg_json]},
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # serializer = GetResourceSchemaorgListRequest(data=request.data)
+        # if serializer.is_valid():
+        #     subject = get_subject(GLOBUS_INDEX_NAME, request.id_list, request.user)  # todo
+        #     print(f"[ListResourceSchemaorg] subject={subject}")
+        #     try:
+        #         endpoint = subject['all'][0]
+        #     except KeyError:
+        #         return Response(
+        #             data={"status": "UUID does not exist"},
+        #             status=status.HTTP_200_OK,
+        #         )
+        #     schemaorg_json = endpoint['schemaorgJson']
+        #     return Response(
+        #         data={"status": "OK", "schemaorg_list": [schemaorg_json]},
+        #         status=status.HTTP_201_CREATED,
+        #     )
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def has_valid_cilogon_token(headers):
@@ -236,8 +240,8 @@ class GetResourceStatusRequest(serializers.Serializer):
 class GetResourceStatus(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=GetResourceStatusRequest, manual_parameters=[], )
-    def post(self, request):
+    @swagger_auto_schema( manual_parameters=[], )
+    def get(self, request, uuid):
         """
             Retrieve the basic infomation for a resource by its UUID.
         """
@@ -247,30 +251,28 @@ class GetResourceStatus(APIView):
         #         data={"status": "Please log in first"},
         #         status=status.HTTP_200_OK,
         #     )
-        serializer = GetResourceStatusRequest(data=request.data)
-        if serializer.is_valid():
-            # file_uuid = str(uuid.uuid4())
-            uuid = serializer.validated_data['uuid']
-            print(f"[GetResourceStatus] uuid={uuid}")
-            try:
-                resource = Resource.objects.get(uuid=uuid)
-            except Exception as e:
-                return Response(
-                    data={"msg": f"Error info = {e}"},
-                    status=status.HTTP_200_OK,
-                )
 
+        # file_uuid = str(uuid.uuid4())
+        # uuid = serializer.validated_data['uuid']
+        print(f"[GetResourceStatus] uuid={uuid}")
+        try:
+            resource = Resource.objects.get(uuid=uuid)
+        except Exception as e:
             return Response(
-                data={"status": "OK",
-                      "uuid": resource.uuid,
-                      "file_path": resource.path,
-                      # "file_path": serializer.validated_data['path'],
-                      "task_id": resource.task_id,
-                      "task_status": "tasks completed successfully",
-                      },
-                status=status.HTTP_201_CREATED,
+                data={"msg": f"Error info = {e}"},
+                status=status.HTTP_200_OK,
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            data={"status": "OK",
+                  "uuid": resource.uuid,
+                  "file_path": resource.path,
+                  # "file_path": serializer.validated_data['path'],
+                  "task_id": resource.task_id,
+                  "task_status": "tasks completed successfully",
+                  },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class UpdateResourceRequest(serializers.Serializer):

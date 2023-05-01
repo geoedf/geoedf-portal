@@ -17,7 +17,7 @@ urlpatterns = [
     path('api/resource/get/<uuid>', api_resource.GetResourceSchemaorg.as_view(), name='api-resource-get'),
     path('api/resource/list/', api_resource.GetResourceSchemaorgList.as_view(), name='api-resource-list'),
     path('api/resource/publish/', api_resource.PublishResource.as_view(), name='api-resource-publish'),
-    path('api/resource/status/', api_resource.GetResourceStatus.as_view(), name='api-resource-status'),
+    path('api/resource/status/<uuid>', api_resource.GetResourceStatus.as_view(), name='api-resource-status'),
     path('api/resource/update/', api_resource.UpdateResource.as_view(), name='api-resource-update'), # update resource info
 
     path('api/accounts/token/verify/', api_account.VerifyToken.as_view(), name='token-verify'),
