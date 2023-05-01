@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include, re_path
 from django.views.generic import RedirectView
+from drf_yasg.generators import OpenAPISchemaGenerator
 from rest_framework import permissions
 
 from .views import urlpatterns as views_urlpatterns
@@ -17,6 +18,14 @@ sitemaps = {
     'geo_file': GeoFileSitemap,
 }
 
+
+class BothHttpAndHttpsSchemaGenerator(OpenAPISchemaGenerator):
+    def get_schema(self, request=None, public=False):
+        schema = super().get_schema(request, public)
+        schema.schemes = ["https", "http"]
+        return schema
+
+
 schema_view = get_schema_view(
     openapi.Info(
         title="GeoEDF API",
@@ -26,6 +35,7 @@ schema_view = get_schema_view(
         # permission_classes=[permissions.AllowAny],
     ),
     public=True,
+    generator_class=BothHttpAndHttpsSchemaGenerator,
 )
 
 urlpatterns = [
