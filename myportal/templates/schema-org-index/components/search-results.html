@@ -73,7 +73,7 @@
                                 <div class="card-body">
                                     <table class="table table-sm borderless">
                                         <tbody>
-                                        {% for element in result.all %}
+                                        {% with element=result.all|first %}
                                             <tr> <!--style="width: 100px" -->
 
                                                 <th>{{ "CreatorName" }}</th>
@@ -95,7 +95,7 @@
                                             <th>{{ element.schemaorgJson.datePublished|slice:":10"  }}</th>
                                             <th>{{ element.dateModified|slice:":10" }}</th>
                                             </tr>
-                                        {% endfor %}
+                                        {% endwith %}
                                         </tbody>
                                     </table>
                                 </div>

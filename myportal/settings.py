@@ -19,9 +19,6 @@ log = logging.getLogger(__name__)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep all secret keys used in production secret!
 # You can generate a secure secret key with `openssl rand -hex 32`
 SECRET_KEY = 'django-insecure-47f(ub2qs-n!b@&&)tis&l$&qf1%^@&jy-95jx!bahqrm^19m2'
@@ -83,7 +80,6 @@ SEARCH_INDEXES = {
             ('size_bytes', fields.size_bytes),
             ('name', fields.name),
             # ('creator', fields.creator_name),
-            # ('creative_work_status', fields.creative_work_status),
             ('id', fields.identifier),
         ],
         'facets': [  # limit of 3 facets
@@ -119,6 +115,16 @@ SEARCH_INDEXES = {
             #     "date_interval": "hour",
             # },
 
+        ],
+    },
+    'list-search-index': {
+        'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
+        'name': 'Schema.org Json Index',
+        'fields': [
+            ('extension', fields.extension),
+            ('size_bytes', fields.size_bytes),
+            ('name', fields.name),
+            ('id', fields.identifier),
         ],
     }
 }

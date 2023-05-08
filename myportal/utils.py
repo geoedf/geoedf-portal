@@ -25,21 +25,19 @@ def get_domain_name():
 
 def get_resource_id_list():
     query = get_setting('DEFAULT_QUERY')
-    # filters = get_search_filters()
     id_list = []
 
-    for page in range(1,2):
-
-        search_result = post_search('schema-org-index', query, [], AnonymousUser(),
-                                    page)  # todo replace index with variable
-        print(f'[GeoFileSitemap | items] search_result={search_result}')
-
-
+    page = 1
+    has_more = True
+    while has_more:
+        search_result = post_search('list-search-index', query, [], AnonymousUser(),
+                                    page)
         for subject_data in search_result['search_results']:
-            # print(f'[GeoFileSitemap | items] subject_data={subject_data["subject"]}')
-            # print(f'[GeoFileSitemap | items] subject_data={subject_data}')
-
             id_list.append(subject_data['subject'])
-            print('[get_resource_id_list]' + subject_data['subject'])
+        if len(search_result['pagination']['pages']) > page:
+            page += 1
+        else:
+            has_more = False
 
+    print(f'[get_resource_id_list] id_list={id_list}')
     return id_list

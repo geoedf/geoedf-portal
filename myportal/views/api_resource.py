@@ -117,7 +117,7 @@ class PublishResourceRequest(serializers.Serializer):
     ]
 
     publication_name = serializers.CharField(
-        allow_null=True,
+        required=False,
         help_text='The name of the publication.',
     )
     resource_type = serializers.ChoiceField(
@@ -125,12 +125,12 @@ class PublishResourceRequest(serializers.Serializer):
         help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
     )
     path = serializers.CharField(
-        allow_null=True,
+        required=False,
         help_text='The path to the resource. Only valid if resource_type is "single" or "multiple".',
     )
     path_list = serializers.ListField(
         child=serializers.CharField(),
-        allow_null=True,
+        required=False,
         help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
     )
 
@@ -182,6 +182,8 @@ class PublishResource(APIView):
             resource = Resource(uuid=file_uuid,
                                 path=serializer.validated_data['path'],
                                 resource_type=serializer.validated_data['resource_type'])
+            if 'publication_name' in serializer.validated_data:
+                resource.publication_name = serializer.validated_data['publication_name']
             resource.save()
             print(f"[PublishResource] resource={resource.__str__()}")
 
@@ -190,6 +192,7 @@ class PublishResource(APIView):
             resource.task_id = task_id
             resource.save()
             return Response(
+
                 data={"status": "Submitted", "uuid": file_uuid,
                       "path": serializer.validated_data['path'],
                       "task_id": task_id,
@@ -212,6 +215,7 @@ def publish_to_globus_index(resource):
     # Send the message to the queue
     message = json.dumps({
         "uuid": resource.uuid,
+        "publication_name": resource.publication_name,
         "type": resource.resource_type,
         "path": resource.path,
     })
@@ -278,7 +282,7 @@ class GetResourceStatus(APIView):
 class UpdateResourceRequest(serializers.Serializer):
     uuid = serializers.IntegerField()
     publication_name = serializers.CharField(
-        allow_null=True,
+        required=False,
         help_text='The name of the publication.',
     )
     # resource_type = serializers.ChoiceField(
@@ -286,12 +290,12 @@ class UpdateResourceRequest(serializers.Serializer):
     #     help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
     # )
     path = serializers.CharField(
-        allow_null=True,
+        required=False,
         help_text='The path to the resource. Only valid if resource_type is "single" or "multiple".',
     )
     path_list = serializers.ListField(
         child=serializers.CharField(),
-        allow_null=True,
+        required=False,
         help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
     )
     user_id = serializers.CharField()
