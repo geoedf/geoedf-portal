@@ -69,7 +69,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ["https://geoedf-portal.anvilcloud.rcac.purdue.edu"]
 
-PROJECT_TITLE = 'GeoEDF'
+PROJECT_TITLE = 'GeoEDF Resource Data Portal'
 SEARCH_INDEXES = {
     'schema-org-index': {
         'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
