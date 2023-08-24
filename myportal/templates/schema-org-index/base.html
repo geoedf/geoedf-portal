@@ -38,8 +38,8 @@
                     var domain = data.domain;  // Assuming the API response contains the new URL
                     // Update the href attribute of the login link
                     var newHref = existingHref.replace('domain', domain);
-                    if (domain !== 'localhost:8000'){
-
+                    if (domain === 'localhost:8000'){
+                        newHref = existingHref.replace('https', 'http');
                     }
                     loginLink.attr('href', newHref);
                 },
