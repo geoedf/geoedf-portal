@@ -1,5 +1,5 @@
 body {
-    margin: 50px;
+    margin: 0 auto;
     background-color: #f0f0f0;
 }
 
@@ -7,7 +7,7 @@ body {
     max-width: 800px;
     margin: 50px;
     padding: 20px;
-    background-color: #aaf;
+    background-color: #eee;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
