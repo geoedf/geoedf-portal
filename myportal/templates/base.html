@@ -8,7 +8,9 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="google-site-verification" content="GrrE5wkX7Bq2iLFLLTHuY0iP6ZhyDvosm5AtaD9mC7I"/><!-- For google site verification, always keep this tag -->
+    <meta name="google-site-verification" content="GrrE5wkX7Bq2iLFLLTHuY0iP6ZhyDvosm5AtaD9mC7I"/>
+    <!-- For google site verification, always keep this tag -->
+
     {# CSS files #}
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}"/>
 
@@ -20,6 +22,34 @@
 
     {# Extras #}
     {% block headextras %}{% endblock %}
+
+    {# dynamic login callback url #}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var loginLink = $('#login-link');
+
+            // Simulate an AJAX response (replace this with your actual AJAX logic)
+            $.ajax({
+                url: '/domain/get/',
+                success: function (data) {
+                    console.log(data.domain);
+                    var existingHref = loginLink.attr('href');
+                    var domain = data.domain;  // Assuming the API response contains the new URL
+                    // Update the href attribute of the login link
+                    var newHref = existingHref.replace('domain', domain);
+                    if (domain !== 'localhost:8000'){
+
+                    }
+                    loginLink.attr('href', newHref);
+                },
+                error: function (error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
+
 
     <title>{% block title %}{% endblock %}</title>
 
@@ -38,19 +68,19 @@
             <ul class="navbar-nav mr-auto"></ul>
             <ul class="navbar-nav my-lg-0">
 
-                {% if backends.backends and request.user.is_authenticated %}
+                {% if  request.user.is_authenticated %}
                     <li>
                         <a class="nav-link" href="{% url 'account_logout' %}">Logout</a>
                     </li>
                     <li>
-                        <a class="nav-link" href="/user/profile/">{{ request.user.username }}</a>
+                        <a class="nav-link" href="/accounts/profile/">{{ request.user.username }}</a>
                     </li>
-                {% elif  not request.user.is_authenticated %}
-{#                    'cilogon' in backends.backends and#}
+                {% elif not request.user.is_authenticated %}
+                    {#                'globus' in backends.backends and #}
                     <li>
-              <a class="nav-link" href="{% provider_login_url 'cilogon' next='https://geoedf-portal.anvilcloud.rcac.purdue.edu/accounts/cilogon/login/callback/' %}">Login</a>
-{#              <a class="nav-link" href="{% url 'social:begin' 'cilogon' %}?next={{ request.get_full_path|urlencode }}">Login</a>#}
-            </li>
+                        <a id="login-link" class="nav-link"
+                           href="{% provider_login_url 'cilogon' next='https://domain/accounts/cilogon/login/callback' %}">Login</a>
+                    </li>
                 {% endif %}
             </ul>
         </div>

@@ -27,21 +27,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#my-button').click(function () {
-                $.ajax({
-                    url: '/domain/get/',
-                    success: function (data) {
-                        console.log(data.domain);
-                    },
-                    error: function (error) {
-                        console.error('Error:', error);
-                    }
-                });
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function () {
             var loginLink = $('#login-link');
 
             // Simulate an AJAX response (replace this with your actual AJAX logic)
@@ -53,7 +38,9 @@
                     var domain = data.domain;  // Assuming the API response contains the new URL
                     // Update the href attribute of the login link
                     var newHref = existingHref.replace('domain', domain);
+                    if (domain !== 'localhost:8000'){
 
+                    }
                     loginLink.attr('href', newHref);
                 },
                 error: function (error) {
@@ -90,12 +77,9 @@
                     </li>
                 {% elif not request.user.is_authenticated %}
                     {#                'globus' in backends.backends and #}
-                    <button id="my-button">Call Django View</button>
                     <li>
                         <a id="login-link" class="nav-link"
-                           href="{% provider_login_url 'cilogon' next='http://domain/accounts/cilogon/login/callback' %}">Login</a>
-                        {#              <a class="nav-link" href="{% provider_login_url 'cilogon' next='http://localhost:8000/accounts/cilogon/login/callback1/' %}">Login</a>#}
-                        {#              <a class="nav-link" href="{% url 'social:begin' 'cilogon' %}?next={{ request.get_full_path|urlencode }}">Login</a>#}
+                           href="{% provider_login_url 'cilogon' next='https://domain/accounts/cilogon/login/callback' %}">Login</a>
                     </li>
                 {% endif %}
             </ul>
