@@ -6,7 +6,7 @@ from allauth.socialaccount.models import SocialToken
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.views import View
 from drf_yasg import openapi
 from globus_portal_framework import gsearch
@@ -137,7 +137,9 @@ def site(request):
 class GetDomainName(View):
     def get(self, request, *args, **kwargs):
         site = Site.objects.get(id=1)
-        return site.domain
+        print(f"[GetDomainName] site.domain={site.domain}")
+        data = {'domain': site.domain}
+        return JsonResponse(data)
 
 
 class GetAccountProfile(View):

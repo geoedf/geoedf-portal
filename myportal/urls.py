@@ -9,7 +9,7 @@ from rest_framework import permissions
 
 from .views import urlpatterns as views_urlpatterns
 from myportal.sitemap import GeoFileSitemap
-from myportal.views.views import index_selection
+from myportal.views.views import index_selection, GetDomainName
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
@@ -47,6 +47,7 @@ urlpatterns = [
     path('', include('social_django.urls', namespace='social')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('admin/', admin.site.urls),
+    path('domain/get/', GetDomainName.as_view()),
 
     # display page
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
