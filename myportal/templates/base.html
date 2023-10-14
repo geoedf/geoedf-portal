@@ -13,6 +13,7 @@
 
     {# CSS files #}
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}"/>
 
     {# Custom Fonts #}
     <script type="text/javascript" src="{% static 'js/fontawesome-all.min.js' %}"></script>
@@ -35,11 +36,10 @@
                 success: function (data) {
                     console.log(data.domain);
                     var existingHref = loginLink.attr('href');
-                    var domain = data.domain;  // Assuming the API response contains the new URL
-                    // Update the href attribute of the login link
-                    var newHref = existingHref.replace('domain', domain);
-                    if (domain === 'localhost:8000'){
-                        newHref = existingHref.replace('https', 'http');
+                    var newHref = existingHref.replace('domain', data.domain);
+                    if (data.domain === 'localhost:8000') {
+                        newHref = newHref.replace('https', 'http');
+                        console.log('equal');
                     }
                     loginLink.attr('href', newHref);
                 },
@@ -66,6 +66,15 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto"></ul>
+        <ul class="navbar-nav my-lg-0">
+
+                {% if  request.user.is_authenticated %}
+                    <li>
+                        <a id="file-manage" class="nav-link"
+                           href="{% url 'file-manage' %}">My Resources</a>
+                    </li>
+                {% endif %}
+            </ul>
             <ul class="navbar-nav my-lg-0">
 
                 {% if  request.user.is_authenticated %}
@@ -83,6 +92,7 @@
                     </li>
                 {% endif %}
             </ul>
+
         </div>
     </div>
 </nav>
@@ -97,5 +107,7 @@
 <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/popper.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+{% block extrascripts %}
+{% endblock %}
 </body>
 </html>

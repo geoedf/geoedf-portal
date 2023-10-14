@@ -1,3 +1,6 @@
+import os
+import uuid
+
 import requests
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
@@ -41,3 +44,14 @@ def get_resource_id_list():
 
     print(f'[get_resource_id_list] id_list={id_list}')
     return id_list
+
+
+def generate_nested_directory(root_path, current_path):
+    directories = []
+    for name in os.listdir(current_path):
+        if os.path.isdir(os.path.join(current_path, name)):
+            unique_id = str(uuid.uuid4())
+            nested_path = os.path.join(current_path, name)
+            nested_directories = generate_nested_directory(root_path, nested_path)
+            directories.append({'id': unique_id, 'name': name, 'path': os.path.relpath(nested_path, root_path), 'directories': nested_directories})
+    return directories

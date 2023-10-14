@@ -1,7 +1,7 @@
 manual_parameters:
   - name: Authorization
     in: header
-    description: Authentication token 111
+    description: Authentication token
     required: true
     schema:
       type: string

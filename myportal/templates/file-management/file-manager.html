@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% load static file_extension info_value %}
+
+{% block title %}My Resource{% endblock %}
+
+{% block headextras %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/file-manager.css' %}"/>
+    {#    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">#}
+    <script src="https://kit.fontawesome.com/9823b5a3ec.js" crossorigin="anonymous"></script>
+    {#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">#}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+{% endblock %}
+
+{% block extrastyle %}
+
+{% endblock extrastyle %}
+
+{% block body %}
+    <div class="container-fluid py-4 px-5">
+        <div class="row">
+            <div class="col-lg-3 border py-2">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% for breadcrumb in breadcrumbs %}
+                            {% if forloop.last %}
+                                <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb.name }}</li>
+                            {% else %}
+                                {% if breadcrumb.name|lower == 'media' %}
+                                    <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb.name }}</li>
+                                {% else %}
+                                    <li class="breadcrumb-item"><a href="{{ breadcrumb.url }}">{{ breadcrumb.name }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
+                <ul class="">
+                    {% for directory in directories %}
+                        {% if directory.directories %}
+                            <li class="">
+                                <i class="fa-solid fa-folder"></i>
+                                <a
+                                        data-bs-toggle="collapse"
+                                        href="#collapse{{ directory.id }}"
+                                        role="button"
+                                        aria-expanded="false"
+                                        aria-controls="collapse{{ directory.id }}"
+                                        onclick="window.location.href = '{% url 'file-manage' directory.path|encoded_path %}';"
+                                >
+                                    {{ directory.name }}
+                                </a>
+                            </li>
+                            {% include 'includes/subdirectories.html' with directory=directory depth=depth|add:"3" %}
+                        {% else %}
+                            <li>
+                                <i class="fa-solid fa-folder"></i>
+                                <a href="{% url 'file-manage' directory.path|encoded_path %}">{{ directory.name }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-lg-9 border py-4">
+                <h5> Upload File(s): </h5>
+                <div class="d-flex justify-content-start mb-3">
+
+                    <label for="fileInput">
+                        <i class="fa-solid fa-upload text-primary fs-3"></i>
+                    </label>
+                    <form method="post" action="{% url 'upload_file' %}" id="upload-file" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="directory" value="{{ selected_directory }}">
+                        <input id="fileInput" class="d-none" onchange="submitForm()" type="file" name="file" required>
+                    </form>
+                </div>
+                {% if files %}
+                    {{ files|length|json_script:"files-count" }}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th scope="col">File Name <i class="fa-solid fa-sort-alpha-asc"></i></th>
+                                <th scope="col">File Type <i class="fa-solid fa-sort-alpha-asc"></i></th>
+                                <th scope="col">Visibility <i class="fa-solid fa-sort-alpha-asc"></i></th>
+                                <th scope="col">Last Modified Time <i class="fa-solid fa-sort-numeric-asc"></i></th>
+                                <th scope="col">Size <i class="fa-solid fa-sort-numeric-asc"></i></th>
+                                <th scope="col">Actions</th>
+                            </tr>
+
+                            {% for file in files %}
+                                <tr data-bs-toggle="tooltip" title="{{ file.file_path|info_value }}">
+                                    <td>
+                                        <span>
+                                          {{ file.filename }}
+                                        </span>
+                                    </td>
+                                    <td>{{ file.filename|file_extension|cut:"."|upper }}</td>
+                                    <td>private</td>
+                                    <td>{{ file.last_modified_time }}</td>
+                                    <td>{{ file.size|filesizeformat }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center actions">
+                                            <span data-bs-toggle="modal" data-bs-target="#info-{{ forloop.counter }}">
+                                                <i title="Info" class="fa-solid fa-info text-success"></i>
+                                            </span>
+                                            <span data-bs-toggle="modal" data-bs-target="#file-{{ forloop.counter }}">
+                                                <i title="Preview" class="fa-solid fa-eye text-primary"></i>
+                                            </span>
+                                            <span data-bs-toggle="modal"
+                                                  data-bs-target="#download-{{ forloop.counter }}">
+                                                <i title="Download" class="fa-solid fa-download text-primary"></i>
+                                            </span>
+                                            <span data-bs-toggle="modal" data-bs-target="#delete-{{ forloop.counter }}">
+                                                <i title="Delete" class="fa-solid fa-trash text-danger"></i>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Preview Modal -->
+                                <div class="modal fade" id="file-{{ forloop.counter }}" tabindex="-1"
+                                     aria-labelledby="infoLabel{{ forloop.counter }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="infoLabel{{ forloop.counter }}">
+                                                    Preview</h5>
+                                                <div class="" id="modal-close-btn-{{ forloop.counter }}"
+                                                     data-bs-dismiss="modal" aria-label="Close">
+                                                    <i class="fa-solid fa-circle-xmark fs-5"></i>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                Fetch and display preview of the current item.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info Modal -->
+                                <div class="modal fade" id="info-{{ forloop.counter }}" tabindex="-1"
+                                     aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h3 class="modal-title fs-5" id="exampleModalLabel">File Info</h3>
+                                                <div class="" id="modal-close-btn-{{ forloop.counter }}"
+                                                     data-bs-dismiss="modal" aria-label="Close">
+                                                    <i class="fa-solid fa-circle-xmark fs-5"></i>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                <strong>File Path:</strong> {{ file.file }} <br>
+                                                <strong>Filename:</strong> {{ file.filename }} <br>
+                                                <strong>Full Path:</strong> {{ file.file_path }} <br>
+                                                <strong>Visibility:</strong> {{ file.visibility }} <br>
+                                                <strong>Last Modified Time:</strong> {{ file.last_modified_time }} <br>
+                                                <strong>Size:</strong> {{ file.size|filesizeformat }} <br>
+                                                <strong>CSV Text (if available):</strong> {{ file.csv_text }}
+
+                                                <form action="{% url 'save_info' file.file_path|encoded_file_path %}"
+                                                      method="post">
+                                                    {% csrf_token %}
+{#                                                    <div class="form-group mb-2">#}
+{#                                                        <label for="" class="form-label">File Info</label>#}
+{#                                                        <input type="text" value="{{ file.file_path|info_value }}"#}
+{#                                                               name="info" id="" class="form-control">#}
+{#                                                    </div>#}
+                                                    <div class="d-flex justify-content-end">
+                                                        <button type="submit" class="btn btn-primary"
+                                                                data-bs-dismiss="modal">Update
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Modal -->
+                                <div class="modal fade" id="file-{{ forloop.counter }}" data-bs-backdrop="static"
+                                     data-bs-keyboard="false"
+                                     tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5"
+                                                    id="staticBackdropLabel">{{ file.filename }}</h1>
+                                                <span>
+                                                  <a href="{% url 'download_file' file.file|encoded_file_path %}">
+                                                    <i title="Download"
+                                                       class="fa-solid fa-download text-success fs-4"></i>
+                                                  </a>
+                                                </span>
+                                                <div class="" id="modal-close-btn-{{ forloop.counter }}"
+                                                     data-bs-dismiss="modal" aria-label="Close">
+                                                    <i class="fa-solid fa-circle-xmark fs-5"></i>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% if file.filename|file_extension in ".jpg, .png, .gif" %}
+                                                    <img height="700px" class="w-100" src="/media/{{ file.file }}"
+                                                         alt="df">
+                                                {% elif file.filename|file_extension in ".mp4, .webm, .ogg" %}
+                                                    <video class="w-100" height="700" controls>
+                                                        <source src="/media/{{ file.file }}" type="video/mp4">
+                                                    </video>
+                                                {% elif file.filename|file_extension in ".pdf, .txt" %}
+                                                    <iframe src="/media/{{ file.file }}" width="100%"
+                                                            height="700px"></iframe>
+                                                {% elif file.filename|file_extension in ".csv" %}
+                                                    <pre class="bg-dark text-light p-3">{{ file.csv_text }}</pre>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="delete-{{ forloop.counter }}" tabindex="-1"
+                                     aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Delete File</h1>
+                                            </div>
+                                            <div class="modal-body">
+                                                {{ file.filename }}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                                <a class="btn btn-danger"
+                                                   href="{% url 'delete_file' file.file|encoded_file_path %}">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No files</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+{% endblock body %}
+
+{% block extrascripts %}
+
+    <script>
+        function submitForm() {
+            document.getElementById("upload-file").submit();
+        }
+    </script>
+    <script>
+        var infoModal = document.getElementById('info-{{ forloop.counter }}');
+        if (infoModal) {
+            infoModal.addEventListener('shown.bs.modal', function (event) {
+                console.log('Info modal is now displayed.');
+            });
+        }
+
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function (event) {
+
+            // For the info modal
+            var infoSpans = document.querySelectorAll("span[data-bs-target^='#info-']");
+            infoSpans.forEach(function (span) {
+                span.addEventListener('click', function () {
+                    var modalID = this.getAttribute('data-bs-target');
+                    var modal = new bootstrap.Modal(document.querySelector(modalID));
+                    modal.show();
+                });
+            });
+
+            // For the preview modal
+            var previewSpans = document.querySelectorAll("span[data-bs-target^='#file-']");
+            previewSpans.forEach(function (span) {
+                span.addEventListener('click', function () {
+                    var modalID = this.getAttribute('data-bs-target');
+                    var modal = new bootstrap.Modal(document.querySelector(modalID));
+                    modal.show();
+                });
+            });
+
+            // For the download modal
+            var downloadSpans = document.querySelectorAll("span[data-bs-target^='#download-']");
+            downloadSpans.forEach(function (span) {
+                span.addEventListener('click', function () {
+                    var modalID = this.getAttribute('data-bs-target');
+                    var modal = new bootstrap.Modal(document.querySelector(modalID));
+                    modal.show();
+                });
+            });
+
+            // For the delete modal
+            var deleteSpans = document.querySelectorAll("span[data-bs-target^='#delete-']");
+            deleteSpans.forEach(function (span) {
+                span.addEventListener('click', function () {
+                    var modalID = this.getAttribute('data-bs-target');
+                    var modal = new bootstrap.Modal(document.querySelector(modalID));
+                    modal.show();
+                });
+            });
+
+        });
+    </script>
+
+{% endblock extrascripts %}

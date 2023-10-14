@@ -44,6 +44,7 @@ urlpatterns = [
     path('index/selection/', index_selection, name='index-selection-p'),
     path('', RedirectView.as_view(url="/schema-org-index/")),
     path('', include('globus_portal_framework.urls')),
+    path('', include('globus_portal_framework.urls_debugging')),
     path('', include('social_django.urls', namespace='social')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('admin/', admin.site.urls),

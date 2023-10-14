@@ -16,3 +16,11 @@ class Resource(models.Model):
         return f"Resource {self.uuid}: " \
                f"resource_type = {self.resource_type}, filepath = {self.path}, task_id = {self.task_id}, " \
                f"created_time = {self.created_time}"
+
+
+class FileInfo(models.Model):
+    path = models.URLField()
+    info = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.path
