@@ -58,7 +58,7 @@ LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/profile/'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # todo local
 
 # This dictates which scopes will be requested on each user login
 SOCIAL_AUTH_GLOBUS_SCOPE = [
@@ -74,6 +74,39 @@ CSRF_TRUSTED_ORIGINS = ["https://geoedf-portal.anvilcloud.rcac.purdue.edu"]
 PROJECT_TITLE = 'GeoEDF Resource Data Portal'
 SEARCH_INDEXES = {
     'schema-org-index': {
+        'uuid': 'dfbccff7-36f8-43e2-9e6e-c38059184985',
+        'name': 'GeoEDF Index',
+        'template_override_dir': 'geoedf-index',
+        'fields': [
+            ('extension', fields.extension),
+            ('size_bytes', fields.size_bytes),
+            ('name', fields.name),
+            ('id', fields.identifier),
+        ],
+        'facets': [  # limit of 3 facets
+            {
+                'name': 'Creator',
+                'field_name': 'schemaorgJson.creator.@list.name',
+                'size': 10,
+                'type': 'terms'
+            },
+            {
+                'name': 'Tags',
+                'field_name': 'tags',
+                'size': 10,
+                'type': 'terms'
+            },
+            {
+                'name': 'Extension',
+                'field_name': 'extension',
+                'size': 10,
+                'type': 'terms'
+            },
+
+
+        ],
+    },
+    'schema-org-index-v1': {
         'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
         'name': 'Schema.org Json Index',
         'template_override_dir': 'schema-org-index',

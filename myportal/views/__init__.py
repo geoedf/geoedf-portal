@@ -1,7 +1,8 @@
 from django.urls import path, include, re_path
 from myportal.views import api_account, api_resource
-from myportal.views.views import temp_view, file_detail, mysearch, GetAccountProfile, FileManager, delete_file, \
-    upload_file, download_file, save_info
+from myportal.views.file_manager_views import FileManager, delete_file, download_file, upload_file, save_info, \
+    create_directory
+from myportal.views.views import temp_view, file_detail, mysearch, GetAccountProfile
 from globus_portal_framework.urls import register_custom_index
 
 register_custom_index('custom_search', ['schema-org-index'])
@@ -33,4 +34,5 @@ urlpatterns = [
     path('file/download/<str:file_path>/', download_file, name='download_file'),
     path('file/upload/', upload_file, name='upload_file'),
     path('file/update/<str:file_path>/', save_info, name='save_info'),
+    path('file/create-directory/', create_directory, name='create_directory'),
 ]
