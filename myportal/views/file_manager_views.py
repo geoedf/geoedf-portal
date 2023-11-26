@@ -2,9 +2,10 @@ import csv
 import datetime
 import json
 import os
+import uuid
 
 import requests
-from allauth.socialaccount.models import SocialToken
+from allauth.socialaccount.models import SocialToken, SocialAccount
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
@@ -18,14 +19,20 @@ from globus_portal_framework.gsearch import post_search, get_search_query, get_s
 from django.shortcuts import render, redirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.functional import SimpleLazyObject
+from rest_framework import permissions
 
 from myportal.constants import GLOBUS_INDEX_NAME, FILES_ROOT
+from myportal.models import Resource
 from myportal.utils import generate_nested_directory
 from django.shortcuts import render, redirect
 from django.core.files.storage import FileSystemStorage
 
+from myportal.views.api_resource import has_valid_cilogon_token, publish_to_globus_index, get_globus_index_submit_taskid
+
 
 class FileManager(View):
+    permission_classes = (permissions.AllowAny,)
+
     def get_breadcrumbs(self, request):
         path_components = [component for component in request.path.split("/") if component]
         breadcrumbs = []
@@ -98,14 +105,23 @@ class FileManager(View):
         return files, directories
 
     def get(self, request, directory=settings.MEDIA_ROOT, *args, **kwargs):
-        media_path = os.path.join(settings.MEDIA_ROOT)
+        print(request.user)
 
-        directories = generate_nested_directory(media_path, media_path)
+        user = SocialAccount.objects.get(user=request.user)
+        email = user.extra_data["email"]
+        # print(f'user= {user.extra_data["email"]}')
+
+        personal_media_path = os.path.join(settings.MEDIA_ROOT, email)
+        print(f'personal_media_path= {personal_media_path}')
+
+        if not os.path.exists(personal_media_path):
+            os.makedirs(personal_media_path)
+        directories = generate_nested_directory(personal_media_path, personal_media_path)
         selected_directory = directory
 
         files = []
         dirs = []
-        selected_directory_path = os.path.join(media_path, selected_directory)
+        selected_directory_path = os.path.join(personal_media_path, selected_directory)
         if os.path.isdir(selected_directory_path):
             files, dirs = self.get_files_from_directory(selected_directory_path)
 
@@ -152,7 +168,8 @@ def upload_file(request):
 
         directory = request.POST.get('directory')
 
-        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, directory))  # saves to the 'files' directory under MEDIA_ROOT
+        fs = FileSystemStorage(
+            location=os.path.join(settings.MEDIA_ROOT, directory))  # saves to the 'files' directory under MEDIA_ROOT
         filename = fs.save(uploaded_file.name, uploaded_file)
         file_url = fs.url(filename)  # You can get the file URL if needed
 
@@ -194,5 +211,36 @@ def save_info(request, file_path):
     #             'info': request.POST.get('info')
     #         }
     #     )
+
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+def publish_file(request):
+    user_id = "qu112@purdue.edu"
+    publication_name = request.POST.get('publication_name')
+    # path = request.POST.get('path')
+    path = "data/files/user/wrfinput_private.nc"
+    description = request.POST.get('description')
+    keywords = request.POST.get('keywords')
+    file_uuid = str(uuid.uuid4())
+    resource = Resource(uuid=file_uuid,
+                        path=path,
+                        resource_type="single",
+                        user_id=user_id)
+
+    resource.save()
+    print(f"[PublishResource] resource={resource.__str__()}")
+
+    publish_to_globus_index(resource)
+    task_id = get_globus_index_submit_taskid(resource)
+    resource.task_id = task_id
+    resource.save()
+
+    resp = {
+        "status": "Submitted",
+        "uuid": file_uuid,
+        "path": path,
+        "task_id": task_id,
+    }
 
     return redirect(request.META.get('HTTP_REFERER'))

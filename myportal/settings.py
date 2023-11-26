@@ -58,7 +58,7 @@ LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/profile/'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # todo local
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'  # todo local
 
 # This dictates which scopes will be requested on each user login
 SOCIAL_AUTH_GLOBUS_SCOPE = [
@@ -153,8 +153,8 @@ SEARCH_INDEXES = {
         ],
     },
     'list-search-index': {
-        'uuid': '15a6acc8-3a23-42ed-98cf-a32833acaae3',
-        'name': 'Schema.org Json Index',
+        'uuid': 'dfbccff7-36f8-43e2-9e6e-c38059184985',
+        'name': 'GeoEDF List Search Index',
         'fields': [
             ('extension', fields.extension),
             ('size_bytes', fields.size_bytes),

@@ -167,7 +167,8 @@ class PublishResource(APIView):
     def post(self, request):
         """
             Calling this API will create a Resource object in database and publish it.
-            Upon successful creation, a message will be sent to a RabbitMQ queue named 'geoedf-all'. The message will then be consumed by a metadata extractor.
+            Upon successful creation, a message will be sent to a RabbitMQ queue named 'geoedf-all'. The message will
+            then be consumed by a metadata extractor.
         """
         print(f"[PublishResource] user={request.user}")
         # todo recover login check
@@ -176,12 +177,14 @@ class PublishResource(APIView):
         #         data={"status": "Please log in first"},
         #         status=status.HTTP_200_OK,
         #     )
+        user_id = "qu112@purdue.edu"
         serializer = PublishResourceRequest(data=request.data)
         if serializer.is_valid():
             file_uuid = str(uuid.uuid4())
             resource = Resource(uuid=file_uuid,
                                 path=serializer.validated_data['path'],
-                                resource_type=serializer.validated_data['resource_type'])
+                                resource_type=serializer.validated_data['resource_type'],
+                                user_id=user_id)
             if 'publication_name' in serializer.validated_data:
                 resource.publication_name = serializer.validated_data['publication_name']
             resource.save()
@@ -212,13 +215,24 @@ def publish_to_globus_index(resource):
 
     channel.queue_declare(queue=RMQ_NAME)
 
-    # Send the message to the queue
-    message = json.dumps({
+    publish_data = {
         "uuid": resource.uuid,
         "publication_name": resource.publication_name,
         "type": resource.resource_type,
         "path": resource.path,
-    })
+        "user_id": resource.user_id,
+    }
+    if resource.description is not None:
+        publish_data['description'] = resource.description
+    if resource.task_id is not None:
+        publish_data['task_id'] = resource.task_id
+    if resource.extra_info is not None:
+        publish_data['extra_info'] = resource.extra_info
+
+    print(f'publish_data={publish_data}')
+
+    # Send the message to the queue
+    message = json.dumps(publish_data)
     # todo get task id
 
     channel.basic_publish(exchange='',
