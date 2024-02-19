@@ -308,5 +308,5 @@ except ImportError:
 # pagination settings
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  # Adjust the page size as needed
+    'PAGE_SIZE': 5,  # Adjust the page size as needed
 }

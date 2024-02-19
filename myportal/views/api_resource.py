@@ -82,9 +82,9 @@ class GetResourceSchemaorgList(APIView):
             )
         list = get_resource_id_list()
         return Response(
-                    data={"list": list, "total":  len(list)},
-                    status=status.HTTP_200_OK,
-                )
+            data={"list": list, "total": len(list)},
+            status=status.HTTP_200_OK,
+        )
         # serializer = GetResourceSchemaorgListRequest(data=request.data)
         # if serializer.is_valid():
         #     subject = get_subject(GLOBUS_INDEX_NAME, request.id_list, request.user)  # todo
@@ -121,13 +121,16 @@ class GetResourceListByUserRequest(serializers.Serializer):
 class GetResourceListByUser(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema(request_body=GetResourceListByUserRequest,
-                         manual_parameters=[
-                             openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
-                                               type=openapi.TYPE_STRING, required=True, ),
-                         ],
-                         )
-    def post(self, request):
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
+                          type=openapi.TYPE_STRING, required=True, ),
+        openapi.Parameter('page', openapi.IN_QUERY, description='Page number of the results to retrieve',
+                          type=openapi.TYPE_INTEGER),
+        openapi.Parameter('page_size', openapi.IN_QUERY, description='Number of results per page',
+                          type=openapi.TYPE_INTEGER),
+    ],
+    )
+    def get(self, request):
         """
             Retrieve the list of UUIDs for all resources.
         """
@@ -165,6 +168,7 @@ class GetResourceListByUser(APIView):
 
         # Collect results from futures
         results = [task.result() for task in as_completed(tasks) if task.result() is not None]
+        # print(f"request. {request.query_params}: {e}")
 
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(results, request)
