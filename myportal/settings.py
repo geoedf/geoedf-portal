@@ -58,7 +58,7 @@ LOGIN_URL = '/login/cilogon'
 # LOGIN_URL = '/login/globus'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/accounts/profile/'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'  # todo local
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 
 # This dictates which scopes will be requested on each user login
 SOCIAL_AUTH_GLOBUS_SCOPE = [
@@ -304,3 +304,9 @@ try:
 except ImportError:
     expected_path = Path(__file__).resolve().parent / 'local_settings.py'
     log.warning(f'You should create a file for your secrets at {expected_path}')
+
+# pagination settings
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # Adjust the page size as needed
+}

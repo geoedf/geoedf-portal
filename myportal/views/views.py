@@ -49,8 +49,8 @@ def file_detail(request, uuid):
     detail = {'id': schemaorg_json['@id'],
               # 'subject': subject['subject'],
               'size_bytes': subject['size_bytes'],
-              'date_published': schemaorg_json['datePublished'],
-              'date_modified': schemaorg_json['dateModified'],
+              'date_published': schemaorg_json.get('datePublished', ''),
+              'date_modified': schemaorg_json.get('dateModified', ''),
               'keywords': schemaorg_json['keywords'],
               }
 

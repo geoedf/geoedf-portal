@@ -9,6 +9,7 @@ class Resource(models.Model):
     description = models.CharField(max_length=1024, null=True)
     path = models.CharField(max_length=255)
     task_id = models.CharField(null=True, max_length=50)
+    status = models.CharField(null=True, max_length=50)
     user_id = models.CharField(null=True, max_length=50)
     created_time = models.DateTimeField(null=True, auto_now_add=True)
     modified_time = models.DateTimeField(null=True, auto_now=True)
@@ -17,7 +18,7 @@ class Resource(models.Model):
     def __str__(self):
         return f"Resource {self.uuid}: " \
                f"resource_type = {self.resource_type}, filepath = {self.path}, task_id = {self.task_id}, " \
-               f"created_time = {self.created_time}"
+               f"user_id = {self.user_id}, created_time = {self.created_time}"
 
 
 class FileInfo(models.Model):

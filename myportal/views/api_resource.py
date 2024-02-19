@@ -1,5 +1,9 @@
 import json
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from http import client
+
+import requests
 import yaml
 
 from django.contrib.auth.models import AnonymousUser
@@ -10,13 +14,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.utils import swagger_serializer_method
 
 from globus_portal_framework import get_subject
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
 from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
 from myportal.models import Resource
-from myportal.utils import verify_cilogon_token, get_resource_id_list
+from myportal.utils import verify_cilogon_token, get_resource_id_list, get_resource_list_by_id, app_search_client
 import pika
 
 
@@ -99,6 +104,73 @@ class GetResourceSchemaorgList(APIView):
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class GetResourceListByUserRequest(serializers.Serializer):
+    page = serializers.IntegerField(min_value=1, required=False, help_text="Page number for pagination")
+    page_size = serializers.IntegerField(min_value=1, max_value=100, required=False,
+                                         help_text="Number of items per page")
+
+    class Meta:
+        swagger_schema_fields = {
+            "example": {
+                "page": 1,
+                "page_size": 10,
+            }
+        }
+
+
+class GetResourceListByUser(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(request_body=GetResourceListByUserRequest,
+                         manual_parameters=[
+                             openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
+                                               type=openapi.TYPE_STRING, required=True, ),
+                         ],
+                         )
+    def post(self, request):
+        """
+            Retrieve the list of UUIDs for all resources.
+        """
+        user_id = get_jupyter_username(request.headers)
+        if user_id is None:
+            return Response(
+                data={"status": "Please log in first"},
+                status=status.HTTP_200_OK,
+            )
+
+        resources = get_resource_list_by_id(user_id)  # Make sure this function accepts a user_id parameter
+
+        def fetch_task_data(resource):
+            try:
+                globus_sdk_client = app_search_client()
+                res = globus_sdk_client.get_task(resource.task_id)
+                return {
+                    "title": resource.publication_name,
+                    "status": res.get('state'),
+                    "state_description": res.get('state_description'),
+                    "completion_date": res.get('completion_date'),
+                    "modified_time": resource.modified_time,
+                }
+            except Exception as e:
+                print(f"Error obtaining task for resource {resource.task_id}: {e}")
+                return None
+
+        # Use ThreadPoolExecutor to fetch task data in parallel
+        tasks = []
+        with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as needed
+            for resource in resources:
+                if resource.task_id is None:
+                    continue
+                tasks.append(executor.submit(fetch_task_data, resource))
+
+        # Collect results from futures
+        results = [task.result() for task in as_completed(tasks) if task.result() is not None]
+
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(results, request)
+        return paginator.get_paginated_response({"list": result_page, "total": len(results)})
+
+
 def has_valid_cilogon_token(headers):
     authorization_header = headers.get('Authorization')
     if not authorization_header or not authorization_header.startswith('Bearer '):
@@ -107,6 +179,30 @@ def has_valid_cilogon_token(headers):
     if verify_cilogon_token(access_token) is None:
         return False
     return True
+
+
+def get_jupyter_username(headers):
+    token = headers.get('Authorization')
+    if not token:
+        return HttpResponseBadRequest('Invalid Authorization header')
+
+    url = f"{JUPYTERHUB_URL}/user"
+    headers = {
+        'Authorization': f'token {token}',
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Error fetching user info: {response.status_code}")
+        return None
+    user_info = response.json()
+    username = user_info.get('name', None)  # Default to 'Unknown' if not found
+    return username
+
+
+# Replace these variables with your actual JupyterHub URL and API token
+JUPYTERHUB_URL = 'https://geoedf-jupyter.anvilcloud.rcac.purdue.edu/hub/api'
+API_TOKEN = '2ae8ff01aec74a5d9662691ebb2f2d54'
 
 
 class PublishResourceRequest(serializers.Serializer):
@@ -153,10 +249,10 @@ class PublishResource(APIView):
     permission_classes = (permissions.AllowAny,)
 
     @swagger_auto_schema(request_body=PublishResourceRequest,
-                         # manual_parameters=[
-                         #     openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
-                         #                       type=openapi.TYPE_STRING, required=True, ),
-                         # ],
+                         manual_parameters=[
+                             openapi.Parameter('Authorization', openapi.IN_HEADER, description='Authentication token',
+                                               type=openapi.TYPE_STRING, required=True, ),
+                         ],
                          responses={
                              status.HTTP_200_OK: openapi.Response('Success message',
                                                                   schema=openapi.Schema(type='object')),
@@ -171,22 +267,27 @@ class PublishResource(APIView):
             then be consumed by a metadata extractor.
         """
         print(f"[PublishResource] user={request.user}")
-        # todo recover login check
-        # if not has_valid_cilogon_token(request.headers):
-        #     return Response(
-        #         data={"status": "Please log in first"},
-        #         status=status.HTTP_200_OK,
-        #     )
-        user_id = "qu112@purdue.edu"
+        # recover login check
+        user_id = get_jupyter_username(request.headers)
+        if not has_valid_cilogon_token(request.headers) and user_id is None:
+            return Response(
+                data={"status": "Please log in first"},
+                status=status.HTTP_200_OK,
+            )
+        print(f"[PublishResource] user from token={user_id}")
+
         serializer = PublishResourceRequest(data=request.data)
         if serializer.is_valid():
             file_uuid = str(uuid.uuid4())
             resource = Resource(uuid=file_uuid,
-                                path=serializer.validated_data['path'],
                                 resource_type=serializer.validated_data['resource_type'],
                                 user_id=user_id)
             if 'publication_name' in serializer.validated_data:
                 resource.publication_name = serializer.validated_data['publication_name']
+            if 'path' in serializer.validated_data:
+                resource.path = serializer.validated_data['path']
+            if 'path_list' in serializer.validated_data:
+                resource.path = str(serializer.validated_data['path_list'])[1:-1]
             resource.save()
             print(f"[PublishResource] resource={resource.__str__()}")
 
@@ -195,7 +296,6 @@ class PublishResource(APIView):
             resource.task_id = task_id
             resource.save()
             return Response(
-
                 data={"status": "Submitted", "uuid": file_uuid,
                       "path": serializer.validated_data['path'],
                       "task_id": task_id,
@@ -258,7 +358,7 @@ class GetResourceStatusRequest(serializers.Serializer):
 class GetResourceStatus(APIView):
     permission_classes = (permissions.AllowAny,)
 
-    @swagger_auto_schema( manual_parameters=[], )
+    @swagger_auto_schema(manual_parameters=[], )
     def get(self, request, uuid):
         """
             Retrieve the basic infomation for a resource by its UUID.
