@@ -145,8 +145,13 @@ class GetResourceListByUser(APIView):
 
         def fetch_task_data(resource):
             try:
-                globus_sdk_client = app_search_client()
-                res = globus_sdk_client.get_task(resource.task_id)
+                if resource.status == "SUCCESS":
+                    return
+                else:
+                    globus_sdk_client = app_search_client()
+                    res = globus_sdk_client.get_task(resource.task_id)
+                    resource.status = res.get('state')
+                    resource.save()
                 return {
                     "title": resource.publication_name,
                     "status": res.get('state'),
