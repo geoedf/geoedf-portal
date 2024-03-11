@@ -318,11 +318,17 @@ class PublishResource(APIView):
             if 'resource_type' in serializer.validated_data:
                 resource.resource_type = serializer.validated_data['resource_type']
             if 'publication_type' in serializer.validated_data:
-                resource.resource_type = 'single'  # ?
+                resource.resource_type = 'multiple'
             if 'publication_name' in serializer.validated_data:
                 resource.publication_name = serializer.validated_data['publication_name']
             if 'path' in serializer.validated_data:
-                resource.path = serializer.validated_data['path']
+                path = serializer.validated_data['path']
+                if user_id is not None:
+                    try:
+                        path = f"/staging/{{{user_id}}}/{path.split('/')[-1]}"
+                    except Exception:
+                        pass
+                resource.path = path
             if 'path_list' in serializer.validated_data:
                 resource.path = str(serializer.validated_data['path_list'])[1:-1]
 
@@ -339,7 +345,7 @@ class PublishResource(APIView):
             resource.save()
             return Response(
                 data={"status": "Submitted", "uuid": file_uuid,
-                      "path": serializer.validated_data['path'],
+                      "path": resource.path,
                       "task_id": task_id,
                       },
                 status=status.HTTP_201_CREATED,
