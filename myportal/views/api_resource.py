@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
-from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP
+from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP, RMQ_HOST
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token, get_resource_id_list, get_resource_list_by_id, app_search_client
 import pika
@@ -357,7 +357,7 @@ class PublishResource(APIView):
 def publish_to_globus_index(resource):
     credentials = pika.PlainCredentials(RMQ_USER, RMQ_PASS)
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RMQ_HOST_IP, port=5672, virtual_host='/', credentials=credentials))
+        pika.ConnectionParameters(host=RMQ_HOST, port=5672, virtual_host='/', credentials=credentials))
 
     channel = connection.channel()
 
