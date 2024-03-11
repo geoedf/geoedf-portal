@@ -325,7 +325,7 @@ class PublishResource(APIView):
                 path = serializer.validated_data['path']
                 if user_id is not None:
                     try:
-                        path = f"/staging/{{{user_id}}}/{path.split('/')[-1]}"
+                        path = f"/staging/{{user_id}}/{path.split('/')[-1]}"
                     except Exception:
                         pass
                 resource.path = path
