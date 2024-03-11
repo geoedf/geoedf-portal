@@ -215,6 +215,11 @@ class PublishResourceRequest(serializers.Serializer):
         ('list', 'List'),
         ('multiple', 'Multiple'),
     ]
+    PUBLICATION_TYPE_CHOICES = [  # todo refine capital letters
+        ('Geospatial Files', 'Geospatial Files'),
+        ('Workflow', 'Workflow'),
+        ('Other Files', 'Other Files'),
+    ]
 
     publication_name = serializers.CharField(
         required=False,
@@ -222,6 +227,7 @@ class PublishResourceRequest(serializers.Serializer):
     )
     resource_type = serializers.ChoiceField(
         choices=RESOURCE_TYPE_CHOICES,
+        required=False,
         help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
     )
     path = serializers.CharField(
@@ -234,6 +240,22 @@ class PublishResourceRequest(serializers.Serializer):
         help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
     )
 
+    publication_type = serializers.ChoiceField(
+        choices=PUBLICATION_TYPE_CHOICES,
+        required=False,
+        help_text='The type of publication. Must be one of "Geospatial Files", "Workflow", or "Other Files".',
+    )
+    description = serializers.CharField(
+        required=False,
+        help_text='The description of the publication.',
+    )
+    keywords = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text='The keywords of the publication.',
+    )
+
+
     class Meta:
         swagger_schema_fields = {
             "example": {
@@ -242,6 +264,14 @@ class PublishResourceRequest(serializers.Serializer):
                 "path_list": ["data/files/Riv2", "data/files/wrfinput_d0x.nc"],
             }
         }
+        # example for jupyter app:
+        # {
+        #     'publication_name': '1',
+        #     'description': '123',
+        #     'keywords': ['123132'],
+        #     'publication_type': 'Workflow',
+        #     'staging_path': '/staging/20240311085349'
+        # }
 
 
 # class PublishResourceResponseSerializer():
@@ -284,14 +314,22 @@ class PublishResource(APIView):
         if serializer.is_valid():
             file_uuid = str(uuid.uuid4())
             resource = Resource(uuid=file_uuid,
-                                resource_type=serializer.validated_data['resource_type'],
                                 user_id=user_id)
+            if 'resource_type' in serializer.validated_data:
+                resource.resource_type = serializer.validated_data['resource_type']
+            if 'publication_type' in serializer.validated_data:
+                resource.resource_type = 'single'  # ?
             if 'publication_name' in serializer.validated_data:
                 resource.publication_name = serializer.validated_data['publication_name']
             if 'path' in serializer.validated_data:
                 resource.path = serializer.validated_data['path']
             if 'path_list' in serializer.validated_data:
                 resource.path = str(serializer.validated_data['path_list'])[1:-1]
+
+            if 'description' in serializer.validated_data:
+                resource.description = serializer.validated_data['description']
+            if 'keywords' in serializer.validated_data:
+                resource.keywords = serializer.validated_data['keywords']
             resource.save()
             print(f"[PublishResource] resource={resource.__str__()}")
 
@@ -325,6 +363,10 @@ def publish_to_globus_index(resource):
         "type": resource.resource_type,
         "path": resource.path,
         "user_id": resource.user_id,
+        "description": resource.description,
+        "keywords": resource.keywords,  # todo
+        "publication_type": resource.publication_type,
+        # "resource_type": "multiple",
     }
     if resource.description is not None:
         publish_data['description'] = resource.description
@@ -333,7 +375,7 @@ def publish_to_globus_index(resource):
     if resource.extra_info is not None:
         publish_data['extra_info'] = resource.extra_info
 
-    print(f'publish_data={publish_data}')
+    print(f'[publish_to_globus_index] publish_data={publish_data}')
 
     # Send the message to the queue
     message = json.dumps(publish_data)

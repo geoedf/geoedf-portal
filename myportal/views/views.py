@@ -55,7 +55,7 @@ def file_detail(request, uuid):
               }
 
     if 'creator' in schemaorg_json and schemaorg_json['creator'] is not None:
-        detail['creator'] = schemaorg_json['creator']['@list'][0]['name']
+        detail['creator'] = schemaorg_json['creator']['@list'][0]['email']
     if 'spatialCoverage' in schemaorg_json:
         if schemaorg_json['spatialCoverage'] is not None:
             if schemaorg_json['spatialCoverage']['@type'] == 'Place':

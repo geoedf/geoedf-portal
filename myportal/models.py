@@ -6,7 +6,9 @@ class Resource(models.Model):
     uuid = models.CharField(default=uuid.uuid4, editable=False, unique=True, max_length=50)
     resource_type = models.CharField(default="single", max_length=50)
     publication_name = models.CharField(max_length=255)
+    publication_type = models.CharField(default="Geospatial Files", max_length=50)  # geospatial/workflow/others
     description = models.CharField(max_length=1024, null=True)
+    keywords = models.CharField(max_length=1024, null=True)
     path = models.CharField(max_length=255)
     task_id = models.CharField(null=True, max_length=50)
     status = models.CharField(null=True, max_length=50)
@@ -16,9 +18,16 @@ class Resource(models.Model):
     extra_info = models.CharField(max_length=1024, null=True)
 
     def __str__(self):
-        return f"Resource {self.uuid}: " \
-               f"resource_type = {self.resource_type}, filepath = {self.path}, task_id = {self.task_id}, " \
-               f"user_id = {self.user_id}, created_time = {self.created_time}"
+        created_time_formatted = self.created_time.strftime('%Y-%m-%d %H:%M:%S') if self.created_time else 'N/A'
+        return (f"Resource UUID: {self.uuid}, "
+                f"Resource Type: {self.resource_type}, "
+                f"Publication Name: {self.publication_name}, "
+                f"Publication Type: {self.publication_type}, "
+                f"Path: {self.path}, "
+                f"Task ID: {self.task_id}, "
+                f"Status: {self.status}, "
+                f"User ID: {self.user_id}, "
+                f"Created Time: {created_time_formatted}")
 
 
 class FileInfo(models.Model):
