@@ -19,6 +19,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from myportal import settings
 from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token, get_resource_id_list, get_resource_list_by_id, app_search_client
@@ -522,6 +523,7 @@ class DownloadResource(APIView):
         """
 
         resource_dir = os.path.join('/persistent', uuid)
+        # resource_dir = os.path.join(settings.MEDIA_ROOT)
         print(f"[DownloadResource] resource_dir={resource_dir}")
 
         if not os.path.exists(resource_dir):
@@ -550,10 +552,11 @@ class DownloadResource(APIView):
                 zip_name = f"{uuid}.zip"
                 zip_path = os.path.join(temp_dir, zip_name)
 
-                # Creating the zip file
-                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                    for file in files:
-                        zipf.write(os.path.join(resource_dir, file), file)
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for root, dirs, files in os.walk(resource_dir):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            zipf.write(file_path, arcname=os.path.relpath(file_path, start=resource_dir))
 
                 with open(zip_path, 'rb') as file:
                     response = HttpResponse(FileWrapper(file), content_type='application/zip')
