@@ -1,28 +1,27 @@
 import json
+import os
 import uuid
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from http import client
+from tempfile import TemporaryDirectory
+from wsgiref.util import FileWrapper
 
+import pika
 import requests
-import yaml
-
 from django.contrib.auth.models import AnonymousUser
-from django.http import HttpResponseBadRequest
+
+from django.http import HttpResponseBadRequest, HttpResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
-from drf_yasg.utils import swagger_serializer_method
-
 from globus_portal_framework import get_subject
+from rest_framework import status, permissions, serializers
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework import status, permissions, serializers
 from rest_framework.views import APIView
 
-from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST_IP, RMQ_HOST
+from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST
 from myportal.models import Resource
 from myportal.utils import verify_cilogon_token, get_resource_id_list, get_resource_list_by_id, app_search_client
-import pika
 
 
 class GetResourceSchemaorg(APIView):
@@ -260,7 +259,6 @@ class PublishResourceRequest(serializers.Serializer):
         help_text='The keywords of the publication.',
     )
 
-
     class Meta:
         swagger_schema_fields = {
             "example": {
@@ -406,12 +404,6 @@ def get_globus_index_submit_taskid(resource):
     return uuid.uuid4()
 
 
-class GetResourceStatusRequest(serializers.Serializer):
-    # id = serializers.IntegerField()
-    uuid = serializers.CharField()
-    pass
-
-
 class GetResourceStatus(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -517,3 +509,53 @@ class UpdateResource(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DownloadResource(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @swagger_auto_schema(manual_parameters=[
+    ], )
+    def get(self, request, uuid):
+        """
+            Download a resource by its UUID.
+        """
+
+        resource_dir = os.path.join('/persistent', uuid)
+        print(f"[DownloadResource] resource_dir={resource_dir}")
+
+        if not os.path.exists(resource_dir):
+            return Response(
+                data={"status": "Resource not found"},
+                status=status.HTTP_200_OK,
+            )
+
+        files = os.listdir(resource_dir)
+        if not files:
+            return Response(
+                data={"status": "No files to download for this resource"},
+                status=status.HTTP_200_OK,
+            )
+
+        if len(files) == 1:
+            # Serve the single file directly
+            file_path = os.path.join(resource_dir, files[0])
+            file = open(file_path, 'rb')
+            response = Response(FileWrapper(file), content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+            return response
+        else:
+            # Zip and serve multiple files
+            with TemporaryDirectory() as temp_dir:
+                zip_name = f"{uuid}.zip"
+                zip_path = os.path.join(temp_dir, zip_name)
+
+                # Creating the zip file
+                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                    for file in files:
+                        zipf.write(os.path.join(resource_dir, file), file)
+
+                with open(zip_path, 'rb') as file:
+                    response = HttpResponse(FileWrapper(file), content_type='application/zip')
+                    response['Content-Disposition'] = f'attachment; filename="{zip_name}"'
+                    return response
