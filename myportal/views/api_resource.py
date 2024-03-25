@@ -537,7 +537,7 @@ class DownloadResource(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        if len(files) == 1:
+        if len(files) == 1 and os.path.isfile(os.path.join(resource_dir, files[0])):
             # Serve the single file directly
             file_path = os.path.join(resource_dir, files[0])
             file = open(file_path, 'rb')
