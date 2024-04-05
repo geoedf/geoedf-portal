@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from rest_framework import serializers
 
 
 class Resource(models.Model):
@@ -28,6 +29,12 @@ class Resource(models.Model):
                 f"Status: {self.status}, "
                 f"User ID: {self.user_id}, "
                 f"Created Time: {created_time_formatted}")
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = '__all__'
 
 
 class FileInfo(models.Model):

@@ -13,3 +13,5 @@ RMQ_PASS = 'guest'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FILES_ROOT = os.path.join(BASE_DIR, 'data', 'files')
+
+RESOURCE_URL_PREFIX = "https://geoedf-portal.anvilcloud.rcac.purdue.edu/resource"

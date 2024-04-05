@@ -18,10 +18,11 @@ from rest_framework import status, permissions, serializers
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.serializers import serialize
 
 from myportal import settings
-from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST
-from myportal.models import Resource
+from myportal.constants import GLOBUS_INDEX_NAME, RMQ_NAME, RMQ_USER, RMQ_PASS, RMQ_HOST, RESOURCE_URL_PREFIX
+from myportal.models import Resource, ResourceSerializer
 from myportal.utils import verify_cilogon_token, get_resource_id_list, get_resource_list_by_id, app_search_client
 
 
@@ -146,14 +147,19 @@ class GetResourceListByUser(APIView):
         def fetch_task_data(resource):
             try:
                 if resource.status == "SUCCESS":
-                    return
-                else:
-                    globus_sdk_client = app_search_client()
-                    res = globus_sdk_client.get_task(resource.task_id)
-                    resource.status = res.get('state')
-                    resource.save()
+                    return {
+                        "title": resource.publication_name,
+                        "url": f'{RESOURCE_URL_PREFIX}/{resource.uuid}',
+                        "status": "SUCCESS",
+                        "modified_time": resource.modified_time,
+                    }
+                globus_sdk_client = app_search_client()
+                res = globus_sdk_client.get_task(resource.task_id)
+                resource.status = res.get('state')
+                resource.save()
                 return {
                     "title": resource.publication_name,
+                    "url": f'{RESOURCE_URL_PREFIX}/{resource.uuid}',
                     "status": res.get('state'),
                     "state_description": res.get('state_description'),
                     "completion_date": res.get('completion_date'),
@@ -343,14 +349,14 @@ class PublishResource(APIView):
             resource.save()
             print(f"[PublishResource] resource={resource.__str__()}")
 
-            publish_to_globus_index(resource)
-            task_id = get_globus_index_submit_taskid(resource)
-            resource.task_id = task_id
+            publish_to_globus_index(resource, request.headers.get('Authorization'))
+            # task_id = get_globus_index_submit_taskid(resource)
+            # resource.task_id = task_id
             resource.save()
             return Response(
                 data={"status": "Submitted", "uuid": file_uuid,
                       "path": resource.path,
-                      "task_id": task_id,
+                      "task_id": resource.task_id,
                       },
                 status=status.HTTP_201_CREATED,
             )
@@ -358,7 +364,7 @@ class PublishResource(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def publish_to_globus_index(resource):
+def publish_to_globus_index(resource, user_jupyter_token):
     credentials = pika.PlainCredentials(RMQ_USER, RMQ_PASS)
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host=RMQ_HOST, port=5672, virtual_host='/', credentials=credentials))
@@ -373,6 +379,7 @@ def publish_to_globus_index(resource):
         "type": resource.resource_type,
         "path": resource.path,
         "user_id": resource.user_id,
+        "user_jupyter_token": user_jupyter_token,
         "description": resource.description,
         "keywords": resource.keywords,  # todo
         "publication_type": resource.publication_type,
@@ -389,7 +396,6 @@ def publish_to_globus_index(resource):
 
     # Send the message to the queue
     message = json.dumps(publish_data)
-    # todo get task id
 
     channel.basic_publish(exchange='',
                           routing_key=RMQ_NAME,
@@ -444,7 +450,7 @@ class GetResourceStatus(APIView):
 
 
 class UpdateResourceRequest(serializers.Serializer):
-    uuid = serializers.IntegerField()
+    uuid = serializers.CharField()
     publication_name = serializers.CharField(
         required=False,
         help_text='The name of the publication.',
@@ -453,6 +459,10 @@ class UpdateResourceRequest(serializers.Serializer):
     #     choices=RESOURCE_TYPE_CHOICES,
     #     help_text='The type of resource being published. Must be one of "single", "list", or "multiple".',
     # )
+    task_id = serializers.CharField(
+        required=False,
+        help_text='The Globus task id of the resource.',
+    )
     path = serializers.CharField(
         required=False,
         help_text='The path to the resource. Only valid if resource_type is "single" or "multiple".',
@@ -462,7 +472,9 @@ class UpdateResourceRequest(serializers.Serializer):
         required=False,
         help_text='A list of paths to the resources being published. Only valid if resource_type is "list".',
     )
-    user_id = serializers.CharField()
+    user_id = serializers.CharField(
+        required=False,
+    )
 
     class Meta:
         swagger_schema_fields = {
@@ -490,22 +502,28 @@ class UpdateResource(APIView):
             Mainly used to update the status queried from Globus Index submission task.
         """
         print(f"[UpdateResource] user={request.user}")
-
-        if not has_valid_cilogon_token(request.headers):
+        user_id = get_jupyter_username(request.headers)
+        if not has_valid_cilogon_token(request.headers) and user_id is None:
             return Response(
                 data={"status": "Please log in first"},
                 status=status.HTTP_200_OK,
             )
+        print(f"[PublishResource] user from token={user_id}")
+
         serializer = UpdateResourceRequest(data=request.data)
         if serializer.is_valid():
             resource = Resource.objects.get(uuid=serializer.validated_data['uuid'])
+            if resource is None or resource.user_id != user_id:
+                return Response(
+                    data={"status": "No such resource under this user"},
+                    status=status.HTTP_200_OK,
+                )
             resource.task_id = serializer.validated_data['task_id']
-            resource.user_id = serializer.validated_data['user_id']
             resource.save()
             print(f"[UpdateResource] resource={resource.__str__()}")
 
             return Response(
-                data=json.dumps(resource),
+                data=ResourceSerializer(resource).data,
                 status=status.HTTP_200_OK,
             )
 
