@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal
+  namespace: geoedf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portal
+  template:
+    metadata:
+      labels:
+        app: portal
+    spec:
+      containers:
+      - name: portal
+        image: registry.anvil.rcac.purdue.edu/geoedf/geoedf-portal_web:46
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+          - mountPath: /staging
+            name: vol-staging
+          - mountPath: /persistent
+            name: vol-persistent
+      imagePullSecrets:
+      - name: qyq-geoedf
+      nodeName: cloud05
+      volumes:
+        - name: vol-staging
+          persistentVolumeClaim:
+            claimName: geoedf-staging
+        - name: vol-persistent
+          persistentVolumeClaim:
+            claimName: geoedf-persistent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal-service
+  namespace: geoedf
+spec:
+  selector:
+    app: portal
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
