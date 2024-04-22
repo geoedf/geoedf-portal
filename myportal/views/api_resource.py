@@ -351,7 +351,7 @@ class PublishResource(APIView):
 
             publish_to_globus_index(resource, request.headers.get('Authorization'))
             # task_id = get_globus_index_submit_taskid(resource)
-            # resource.task_id = task_id
+            resource.status = "EXTRACTING"
             resource.save()
             return Response(
                 data={"status": "Submitted", "uuid": file_uuid,
